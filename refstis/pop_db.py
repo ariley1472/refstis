@@ -28,15 +28,15 @@ def get_directories():
     """
 
     directories = []
-    for year in range(2011, 2020):   #change back to 1996 to create older darks
+    for year in range(2011, 2020):   #AER 21 Oct 2016: for year in range(2011, 2020): #change back to 1996 to create older darks
         for month in ('01', '02', '03', '04', '05', '06',
                       '07', '08', '09', '10', '11', '12'):
             for last in ('/', 'a/', 'b/'):
                 path = anneal_dir + str(year) + '_' + month + last
-                if os.path.exists(path) and path != anneal_dir+'2010_01/':
-                    crj_list = glob.glob(path + '?????????_crj.fits')
+                if os.path.exists(path) and path != anneal_dir+'2010_01/': # Is there are reason it can't be 2010_01?
+                    crj_list = glob.glob(path + '?????????_crj.fits') #get crj files
                     crj_list.sort()
-                    if len(crj_list) == 2:
+                    if len(crj_list) == 2: #one for before the anneal and one for after
                         print(path)
                         directories.append( path )
     return directories
@@ -56,17 +56,19 @@ def grab_anneal_mjds():
 
     print('Getting anneal information')
     anneal_info = []
-    for directory in get_directories():
+    for directory in get_directories(): #for each directory with anneal observations in it,
         anneal_obs = glob.glob( os.path.join(directory, '?????????_crj.fits') )
         anneal_obs.sort()
-        if len(anneal_obs) != 2:
-            print('Error in ', directory)
-            continue
+        if len(anneal_obs) != 2: #if there are not 2 crj files (1 for before the anneal and another for after),
+            print('Error in ', directory) #throw an error
+            continue #and move on.
 
+        # Get information from each observation for the anneal database.
         proposid = pyfits.getval( anneal_obs[0], 'PROPOSID', ext=0 )
         visit_number = int(pyfits.getval(anneal_obs[1], 'OBSET_ID')) - 1
         anneal_start = pyfits.getval(anneal_obs[0], 'TEXPSTRT', ext=0)
         anneal_end = pyfits.getval(anneal_obs[1], 'TEXPSTRT', ext=0)
+
 
         anneal_info.append( (proposid, visit_number, anneal_start, anneal_end) )
 
@@ -117,7 +119,7 @@ def pop_database(anneal_info):
 
 def main():
     """ Main function to retrieve anneal info and populate database """
-    anneal_stats = grab_anneal_mjds()
+    anneal_stats = grab_anneal_mjds() # Gets important anneal information.
     pop_database(anneal_stats)
 
 #-------------------------------------------------------------------------------

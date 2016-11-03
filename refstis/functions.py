@@ -492,7 +492,7 @@ def count_imsets(file_list):
 def get_keyword(file_list,keyword,ext=0):
     """ return the value from a header keyword over a list of files
 
-    if the value is not consistent accross the input files, an assertion error
+    if the value is not consistent across the input files, an assertion error
     will be raised
 
     """

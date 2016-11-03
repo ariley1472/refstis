@@ -69,6 +69,7 @@ def get_new_periods(products_directory, settings):
 
     c.execute("""SELECT * FROM %s """ % (table))
 
+    # get the information from the anneal database.
     all_info = [row for row in c]
 
     table_id_all = [row[0] for row in all_info]
@@ -80,15 +81,15 @@ def get_new_periods(products_directory, settings):
     dirs_to_process = []
 
     for i in range(len(table_id_all))[::-1]:
-        if i == len(table_id_all) - 1: continue
+        if i == len(table_id_all) - 1: continue # if it is at the last entry, move along. Nothing to see here.
         ref_begin = anneal_end_all[i]
         ref_end = anneal_start_all[i + 1]
         #-- defined from proposal of the next anneal
         proposal = proposal_id_all[i + 1]
 
         visit = visit_id_all[i + 1]
-        year, month, day, dec_year = mjd_to_greg(ref_begin)
-        end_year, end_month, end_day, dec_year = mjd_to_greg(ref_end)
+        year, month, day, dec_year = mjd_to_greg(ref_begin) # AER 21 Oct 2016: Can also use astropy.time
+        end_year, end_month, end_day, dec_year = mjd_to_greg(ref_end) # AER 21 Oct 2016: can also use astropy.time
 
         if visit < 10:
             visit = '0' + str(visit)
@@ -109,19 +110,21 @@ def get_new_periods(products_directory, settings):
         #-- to only process datasets if new data has been retrieved?
         dirs_to_process.append(products_folder)
 
-        if not os.path.exists(products_folder):
+        if not os.path.exists(products_folder): # if the product folder ('products_directory/propid_visit') does not exist, make it!
             os.makedirs(products_folder)
 
+        # Find all of the observations that have already been retrieved
         already_retrieved = []
         for root, dirs, files in os.walk(products_folder):
             for filename in files:
                 if filename.endswith('_raw.fits'):
                     already_retrieved.append(filename[:9])
 
+        # Get the observations that fell between the anneals for both dark and bias
         new_obs = get_new_obs('DARK', ref_begin, ref_end, settings) + \
                   get_new_obs('BIAS', ref_begin, ref_end, settings)
 
-        obs_to_get = [obs for obs in new_obs if not obs in already_retrieved]
+        obs_to_get = [obs for obs in new_obs if not obs in already_retrieved] # List of the observations that are new and not already retrieved.
 
         if not len(obs_to_get):
             print('No new obs to get, skipping this period\n\n')
@@ -130,8 +133,8 @@ def get_new_periods(products_directory, settings):
             print('Found new observations for this period')
             print(obs_to_get, '\n\n')
 
-        response = collect_new(obs_to_get, settings)
-        move_obs(obs_to_get, products_folder, settings['retrieve_directory'])
+        response = collect_new(obs_to_get, settings) # Download the new observations
+        move_obs(obs_to_get, products_folder, settings['retrieve_directory']) # move obs_to_get from retrieval directory to products_folder
         separate_obs(products_folder, ref_begin, ref_end)
 
     return dirs_to_process
@@ -222,8 +225,12 @@ def grab_between(file_list, mjd_start, mjd_end):
         with pyfits.open(filename) as hdu:
             data_start = hdu[0].header['TEXPSTRT']
             data_end = hdu[0].header['TEXPEND']
+            binaxis1 = hdu[0].header['BINAXIS1'] # AER 20 oct 2016
+            binaxis2 = hdu[0].header['BINAXIS2'] # AER 20 Oct 2016
+            print('binaxis1, binaxis2: ', binaxis1, binaxis2) # AER 20 oct 2016
+            #raise # AER 21 Oct 2016: what's the deal here?
 
-        if mjd_start < data_start < mjd_end:
+        if mjd_start < data_start < mjd_end: # and binaxis1 == 1 and binaxis2 == 2: # AER 20 Oct 2016: added binaxes
             yield filename
 
 #-------------------------------------------------------------------------------
@@ -293,8 +300,7 @@ def get_anneal_month(proposal_id, anneal_id):
 #-------------------------------------------------------------------------------
 
 def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
-    """Make reference files like the refstis pipeline
-
+    """
     1.  Separate dark and bias datasets into week folders
     2.
 
@@ -325,21 +331,47 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
     print('###################')
     print(' make the basebias ')
     print('###################')
-    raw_files = []
+
+    raw_files1 = [] # AER 25 Oct. 2016: Changed this to 1
+    raw_files = [] # AER 25 Oct 2016: To hold the files with 1x1 binning
+    remove_files = [] # AER 25 Oct 2016: remove all files without 1x1 binning?
+
+
 
     for root, dirs, files in os.walk(os.path.join(root_folder, 'biases')):
         if not '1-1x1' in root:
             continue
 
+        #if not os.path.exists('remove_files'): #AER 25 Oct 2016
+            #os.mkdir(os.path.join(root,'remove_files'))
+
         for filename in files:
             if filename.startswith('o') and filename.endswith('_raw.fits'):
-                raw_files.append(os.path.join(root, filename))
+                raw_files1.append(os.path.join(root, filename)) # AER 25 Oct 2016: Changed this to 1
+
+        #AER 25 Oct 2016
+        for f in raw_files1:
+            #print f
+            if fits.getval(f, 'BINAXIS1') == 1 and fits.getval(f, 'BINAXIS2') == 1:
+                raw_files.append(f)
+            else:
+                remove_files.append(f)
+                #os.remove(f)
+                print 'IN REMOVED_FILES:', f
+
+
+        #AER 25 Oct 2016
+        for filename in raw_files:
+            print filename, fits.getval(filename, 'BINAXIS1'), fits.getval(filename, 'BINAXIS2')
+    #raise # AER 25 oct 2016
 
     basebias_name = os.path.join(root_folder, 'basebias.fits')
     if os.path.exists(basebias_name):
         print('{} already exists, skipping')
     else:
         basejoint.make_basebias(raw_files, basebias_name)
+        print('raw_files:', raw_files) #AER 18 Oct 2016
+
 
     print('#######################')
     print(' make the weekly biases')
@@ -358,12 +390,12 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
 
         proposal, wk, visit = pull_info(folder)
 
-        raw_files = glob.glob(os.path.join(folder, '*raw.fits'))
+        #raw_files = glob.glob(os.path.join(folder, '*raw.fits')) # AER 31 Oct 2016: commented this out. We want the raw files from above (with 1x1 binning)
         n_imsets = functions.count_imsets(raw_files)
 
         gain = functions.get_keyword(raw_files, 'CCDGAIN', 0)
-        xbin = functions.get_keyword(raw_files, 'BINAXIS1', 0)
-        ybin = functions.get_keyword(raw_files, 'BINAXIS2', 0)
+        xbin = functions.get_keyword(raw_files, 'BINAXIS1', 0) # = 1 if my for loop above worked AER 25 Oct 2016 (apparently not...)
+        ybin = functions.get_keyword(raw_files, 'BINAXIS2', 0) # = 1 if my for loop above worked AER 25 Oct 2016
 
         weekbias_name = os.path.join(folder,
                                      'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk))
@@ -394,6 +426,7 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
     print('#######################')
     print(' make the weekly darks ')
     print('#######################')
+
     all_flt_darks = []
     dark_folders = [item for item in week_folders if '/darks/' in item]
     print(dark_folders)
@@ -545,6 +578,7 @@ def get_new_obs(file_type, start, end, settings):
     transmit.close()
     mast_results = receive.readlines()
     receive.close()
+    print('mast results:', mast_results)
 
     # Prune mast_results of unwanted information
     mast_results = mast_results[7:-2]
@@ -553,7 +587,7 @@ def get_new_obs(file_type, start, end, settings):
 
     obs_names = np.array(mast_rootnames)
     start_times_MJD = np.array(list(map(translate_date_string, mast_start_times)))
-    index = np.where((start_times_MJD > start) & (start_times_MJD < end))[0]
+    index = np.where((start_times_MJD > start) & (start_times_MJD < end))[0] # Find the observations that were taken between the anneal periods.
 
     if not len(index):
         print("WARNING: didn't find any datasets, skipping")
@@ -586,7 +620,7 @@ def collect_new(observations_to_get, settings):
     killed = False
 
     while not done:
-        print("waiting for files to be delivered")
+        print("waiting for files to be delivered") # Print this every 60 seconds or so...
         time.sleep(60)
         done, killed = everything_retrieved(tracking_id)
 
@@ -613,11 +647,15 @@ def separate_period(base_dir):
     if not len(all_files):
         print("nothing to move")
         return
-
+    for f in all_files: #AER 18 Oct 2016
+        print f, fits.getval(f, 'EXPSTART', ext = 1) #AER 18 Oct 2016
+    #raise #AER 18 OCt 2016
     mjd_times = np.array([fits.getval(item, 'EXPSTART', ext=1)
                           for item in all_files])
     month_begin = mjd_times.min()
+    print('month_begin:', month_begin) #AER Oct 18 2016
     month_end = mjd_times.max()
+    print('month_end:', month_end) #AER Oct 18 2016
     print('All data goes from', month_begin, ' to ',  month_end)
 
     select_gain = {'WK' : 1,
@@ -632,6 +670,7 @@ def separate_period(base_dir):
         for item in all_files:
             with fits.open(item) as hdu:
                 if (hdu[0].header['TARGNAME'] == file_type) and (hdu[0].header['CCDGAIN'] == gain):
+                    print('item:', item)
                     obs_list.append(item)
 
         if not len(obs_list):
@@ -641,7 +680,8 @@ def separate_period(base_dir):
             print(file_type,  mode, len(obs_list), 'files to move, ', 'gain = ', gain)
 
         N_days = int(month_end - month_begin)
-        N_periods = figure_number_of_periods(N_days, mode)
+        print('N_days:', N_days) #AER Oct 18 2016
+        N_periods = figure_number_of_periods(N_days, mode) # determine the number of weeks the anneal period should be split into.
         week_lengths = functions.figure_days_in_period(N_periods, N_days)
 
         #--Add remainder to end
@@ -719,16 +759,17 @@ def separate_obs(base_dir, month_begin, month_end):
     all_files = glob.glob(os.path.join(base_dir, '*raw.fits'))
 
     mjd_times = np.array([fits.getval(item, 'EXPSTART', ext=1)
-                          for item in all_files])
+                          for item in all_files]) # Put the exposure start times for all the files in a list.
     print('All data goes from', mjd_times.min(), ' to ',  mjd_times.max())
 
     select_gain = {'WK' : 1,
                    'BIWK' : 4}
 
+    # Sort the observations into weekly bias, weekly darks, and biweekly bias directories.
     for file_type, mode in zip(['BIAS', 'DARK', 'BIAS'],
                                ['WK', 'WK', 'BIWK']):
 
-        gain = select_gain[mode]
+        gain = select_gain[mode] # Get the gain for each mode gain = [1, 1, 4]
 
         obs_list = []
         for item in all_files:
@@ -742,11 +783,11 @@ def separate_obs(base_dir, month_begin, month_end):
 
         print(file_type,  mode, len(obs_list), 'files to move, ', 'gain = ', gain)
 
-        N_days = int(round(month_end - month_begin))
-        N_periods = figure_number_of_periods(N_days, mode)
-        week_lengths = functions.figure_days_in_period(N_periods, N_days)
+        N_days = int(round(month_end - month_begin)) # Get the number of days in the anneal period
+        N_periods = figure_number_of_periods(N_days, mode) # get the number of anneal periods for each mode
+        week_lengths = functions.figure_days_in_period(N_periods, N_days) # Calculates the number of days in each week during the anneal.
 
-        anneal_weeks = [(month_begin + item - week_lengths[0], month_begin + item) for item in np.cumsum(week_lengths)]
+        anneal_weeks = [(month_begin + item - week_lengths[0], month_begin + item) for item in np.cumsum(week_lengths)] # Calculate dates of the anneal weeks
 
         print()
         print(file_type, mode, 'will be broken up into %d periods as follows:'%(N_periods))
@@ -763,6 +804,7 @@ def separate_obs(base_dir, month_begin, month_end):
                 week = '0'+week
 
             output_path = base_dir
+            # The following filenaming loops are only correct if there is only 1x1 binning, which is not always the case...
             if file_type == 'BIAS':
                 output_path = os.path.join(output_path,
                                            'biases/%d-1x1/%s%s/'%(gain,
@@ -779,9 +821,18 @@ def separate_obs(base_dir, month_begin, month_end):
                 os.makedirs(output_path)
 
             print('week goes from: ', begin, end)
-            obs_to_move = [item for item in obs_list if
+            obs_to_move1 = [item for item in obs_list if
                             ((fits.getval(item, 'EXPSTART', ext=1) >= begin) and
                              (fits.getval(item, 'EXPSTART', ext=1) < end))]
+            #AER 24 Oct 2016: Added this here? Don't know if it'll work
+            obs_to_move = [item for item in obs_to_move1 if
+                            ((fits.getval(item, 'BINAXIS1') == 1) and
+                            (fits.getval(item, 'BINAXIS2') == 1))]
+
+            for i in obs_to_move:
+                print i, fits.getval(i, 'BINAXIS1'), fits.getval(i, 'BINAXIS2')
+            #raise
+
 
             if not len(obs_to_move):
                 print('error, empty list to move')
@@ -894,23 +945,25 @@ def run(config_file='config.yaml'):
         data = yaml.load(f)
         products_directory = data['products_directory'] #AER 23 August 2016
 
+    # creates the products, retrieval, and delivery directories, as specified in config.yaml
     for location in [data['products_directory'], data['retrieve_directory'], data['delivery_directory']]:
         if not os.path.isdir(location):
             os.makedirs(location)
 
+    # oref is the STIS environment.
     if not 'oref' in os.environ:
         raise KeyError("oref environment must be set to run the pipeline.")
 
-    pop_db.main()
+    pop_db.main() # Populate the anneal database with stop and start dates, etc.
 
-    all_folders = get_new_periods(data['products_directory'], data)
+    all_folders = get_new_periods(data['products_directory'], data) #
 
 
     if args.redo_all: # AER 11 Aug 2016: in an attempt to use the commandline args.
         print("----------------------------------")
         print("Processing all past anneal months")
         print("----------------------------------")
-        print 'all_folders:', all_folders
+        #print 'all_folders:', all_folders
         for folder in all_folders:
             make_pipeline_reffiles(folder)
             tail = folder.rstrip(os.sep).split(os.sep)[-1]
@@ -937,25 +990,38 @@ def run(config_file='config.yaml'):
         filestoprocess = []
         print 'products_directory:', products_directory
         for all_anneals in glob.glob(''.join([products_directory, '?????_??/darks/'])):
+            #print("*************************")#AER 12 Oct 2016
+            #print(all_anneals)#AER 12 Oct 2016
+            #print("*************************")#AER 12 Oct 2016
             for root, directories, files_all in os.walk(all_anneals):
-                print directories
+                #print("root:", root)#AER 12 Oct 2016
+                #print("directories:", directories)#AER 12 Oct 2016
+                #print("files_all:", files_all)#AER 12 Oct 2016
                 if not directories:
-                    fltfiles = glob.glob(''.join([root, '/*_flt.fits']))
-                    if len(fltfiles) != 0:
+                    #print('not directories?') #AER 12 Oct 2016
+                    #print('root, files:', root, files_all)
+                    fltfiles = glob.glob(''.join([root, '/*_raw.fits'])) #AER 18 oct 2016: Changed flt to raw files
+                    #print("len flt files:", len(fltfiles)) #AER 12 Oct 2016
+                    try:
                         onefile = np.sort(fltfiles)[0]
-                        obsdate = fits.getval(onefile, 'TDATEOBS', ext = 0)
-                        if (obsdate <= args.reprocess_month[1] and obsdate >= args.reprocess_month[0]):
-                            filestoprocess.append(root)
-        print 'filestoprocess:', filestoprocess
+                    except: # AER 18 oct 2016: I believe this would throw an exception only if the length of the list is none.
+                        print('*********************************')
+                        print('ERROR: NO FLT FILES HERE')
+                        print('*********************************')
+                        continue
+                    obsdate = fits.getval(onefile, 'TDATEOBS', ext = 0)
+                    #print('obsdate:', obsdate) #AER 12 Oct 2016
+                    if (obsdate <= args.reprocess_month[1] and obsdate >= args.reprocess_month[0]):
+                        filestoprocess.append(root)
+        #print 'filestoprocess:', filestoprocess
         folders1 = []
         for f in filestoprocess:
-            print '/'.join(f.split('/')[:7])
+            #print '/'.join(f.split('/')[:7])
             folders1.append('/'.join(f.split('/')[:7]))
         all_folders = set(folders1)
 
         for folder in all_folders:
             make_pipeline_reffiles(folder)
-            tail = folder.rstrip(os.sep).split(os.sep)[-1]
             destination = os.path.join(data['delivery_directory'], tail)
             check_all(folder, destination)
 #-----------------------------------------------------------------------

@@ -180,6 +180,7 @@ def regress(folder):
     print('Running regression for')
     print(folder)
     print('#------------------#')
+    raise # AER 2 Nov 2016
 
     monitor_dir = '/grp/hst/stis/darks_biases'
     test_suite = os.path.join(monitor_dir, 'test_suite')

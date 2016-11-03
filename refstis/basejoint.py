@@ -66,6 +66,7 @@ def average_biases(bias_list):
             hdr1 = hdu[1].header
             nimset = hdr0['nextend'] // 3
             ncombine = hdr1['ncombine']
+            print('average biases:', iteration, item, np.shape(hdu[1].data)) # AER 19 Oct 2016
 
             #-- If input files have more than one imset or
             #-- have not been cr-rejected, exit
@@ -274,6 +275,7 @@ def make_basebias(input_list, refbias_name='basebias.fits'):
     crj_list = [calibrate(item) for item in input_list]
     crj_list = [item for item in crj_list if item != None]
 
+    #print('crj list', crj_list) # AER 19 Oct 2016
     mean_bias, totalweight = average_biases(crj_list)
 
     print('Replacing hot columns and pixels by median-smoothed values')
