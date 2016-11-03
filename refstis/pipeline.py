@@ -1,28 +1,6 @@
-#!/usr/bin/env python
-
 """Create STIS Superdarks and Superbiases for the CCD detector.
 
-Biases
-------
-1.  Retrieve new datasets from the archive
-2.  Separate darks and biases anneal "weeks"
-3.  Run refbias
-3a. If fewer than threshold frames, run weekbias
-4.  Create new baseline bias file
-5.  Update headers.
-
-Darks
------
-1.  Retrieve new datasets from the archive
-2.  Create basedark
-3.  Create weekly dark using basedark from previous month
-4.  Update headers.
-
-Test reference files and deliver.
-
 """
-
-
 
 import sqlite3
 import glob
@@ -48,14 +26,6 @@ from . import refbias
 from . import weekbias
 from . import basejoint
 from . import functions
-
-#dark_proposals = [7600, 7601, 8408, 8437, 8837, 8864, 8901, 8902, 9605, 9606,
-#                  10017, 10018, 11844, 11845, 12401, 12402, 12741, 12742]
-#bias_proposals = [7600, 7601, 8409, 8439, 8838, 8865, 8903, 8904, 9607, 9608,
-#                  10019, 10020, 11846, 11847, 12403, 12404, 12743, 12744]
-
-dark_proposals = [11844, 11845, 12400, 12401, 12741, 12742, 13131, 13132, 13518, 13519, 13980, 13981, 14412, 14413]
-bias_proposals = [11846, 11847, 12402, 12403, 12743, 12744, 13133, 13134, 13535, 13536, 13982, 13983, 14414, 14415]
 
 #-------------------------------------------------------------------------------
 
@@ -454,7 +424,7 @@ def clean_directory(root_path):
 
     .. warning::
 
-      This WILL remove ANY files that do not match *_raw.fits.  This includes
+      This WILL remove ANY files that do not match \*_raw.fits.  This includes
       any plots, txt files, other fits files, anything.
 
     """
@@ -509,11 +479,11 @@ def reset(folder):
 def get_new_obs(file_type, start, end, settings):
 
     if file_type == 'DARK':
-        proposal_list = dark_proposals
+        proposal_list = settings['dark_proposals']
         MIN_EXPTIME = 1000
         MAX_EXPTIME = 1200
     elif file_type == 'BIAS':
-        proposal_list = bias_proposals
+        proposal_list = settings['bias_proposals']
         MIN_EXPTIME = -1
         MAX_EXPTIME = 100
     else:
@@ -527,7 +497,6 @@ def get_new_obs(file_type, start, end, settings):
 
     # Connect to server
     connection = "tsql -S {0} -D '{1}' -U '{2}' -P '{3}' -t '|'".format(mast_server, mast_database, mast_account, mast_password)
-    print(connection)
     transmit, receive = os.popen2(connection)
 
     OR_part = "".join(["science.sci_pep_id = %d OR "%(proposal) for proposal in proposal_list])[:-3]
@@ -899,7 +868,10 @@ def run(config_file='config.yaml'):
             os.makedirs(location)
 
     if not 'oref' in os.environ:
-        raise KeyError("oref environment must be set to run the pipeline.")
+        if not 'oref' in data:
+            raise KeyError("oref environment must be set to run the pipeline.")
+        else:
+            os.environ['oref'] = data['oref']
 
     pop_db.main()
 
