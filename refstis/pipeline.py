@@ -898,7 +898,7 @@ Procedure
 
 #-----------------------------------------------------------------------
 
-def run(config_file='config.yaml'):
+def run(config_file='refstis_config.yaml'): # AER 10 Nov 2016: changed from config.yaml
     """Run the reference file pipeline """
 
     args = parse_args()
