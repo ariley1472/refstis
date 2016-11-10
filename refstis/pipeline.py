@@ -847,7 +847,7 @@ Procedure
 
 #-----------------------------------------------------------------------
 
-def run(config_file='config.yaml'):
+def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config.yaml
     """Run the reference file pipeline """
 
     args = parse_args()
@@ -910,9 +910,9 @@ def run(config_file='config.yaml'):
         print 'products_directory:', products_directory
         for all_anneals in glob.glob(''.join([products_directory, '?????_??/darks/'])):
             for root, directories, files_all in os.walk(all_anneals):
-                print directories
+                #print directories
                 if not directories:
-                    fltfiles = glob.glob(''.join([root, '/*_flt.fits']))
+                    fltfiles = glob.glob(''.join([root, '/*_flt.fits'])) 
                     if len(fltfiles) != 0:
                         onefile = np.sort(fltfiles)[0]
                         obsdate = fits.getval(onefile, 'TDATEOBS', ext = 0)
