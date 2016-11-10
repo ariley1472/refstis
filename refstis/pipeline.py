@@ -966,12 +966,7 @@ def run(config_file='refstis_config.yaml'): # AER 10 Nov 2016: changed from conf
             #print(all_anneals)#AER 12 Oct 2016
             #print("*************************")#AER 12 Oct 2016
             for root, directories, files_all in os.walk(all_anneals):
-                #print("root:", root)#AER 12 Oct 2016
-                #print("directories:", directories)#AER 12 Oct 2016
-                #print("files_all:", files_all)#AER 12 Oct 2016
                 if not directories:
-                    #print('not directories?') #AER 12 Oct 2016
-                    #print('root, files:', root, files_all)
                     fltfiles = glob.glob(''.join([root, '/*_raw.fits'])) #AER 18 oct 2016: Changed flt to raw files
                     #print("len flt files:", len(fltfiles)) #AER 12 Oct 2016
                     try:

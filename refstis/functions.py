@@ -152,7 +152,7 @@ def update_header_from_input(filename, input_list):
     if len(hdu_out[0].header['DESCRIP']) > 67:
         raise ValueError('DESCRIP is too long! {}'.format(hdu_out[0].header['DESCRIP']))
 
-    hdu_out[0].header.add_comment('Reference file created by %s' % __name__ )
+    hdu_out[0].header.add_comment('Reference file created by %s' %__name__ )
 
     hdu_out[0].header.add_history('Super{} image, combination of {} input {} frames taken in'.format(targname.lower(),
                                                                                                      nimsets,
@@ -1036,6 +1036,7 @@ def bias_subtract_data(filename, biasfile):
             print()
             with open(trailerfile) as tr:
                 for line in tr.readlines():
+                    #print('THE FOLLOWING IS WHY THIS IS ABOUT TO CRASH:')
                     print('    {}'.format(line.strip()))
         finally:
             raise Exception('BASIC2D failed to properly reduce {}'.format(filename))
