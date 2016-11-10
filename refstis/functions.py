@@ -402,6 +402,7 @@ def crreject(input_file, workdir=None):
                     print()
                     with open(trailerfile) as tr:
                         for line in tr.readlines():
+                            print('THIS IS WHY THIS IS ABOUT TO CRASH:')
                             print('    {}'.format(line.strip()))
                 finally:
                     raise Exception('BASIC2D failed to properly reduce {}'.format(input_file))
