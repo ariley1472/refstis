@@ -2,6 +2,7 @@ from astropy.io import fits as pyfits
 from astropy.stats import sigma_clipped_stats
 import numpy as np
 import os
+import pkg_resources
 import shutil
 from scipy.signal import medfilt
 from scipy.ndimage.filters import median_filter
@@ -152,7 +153,7 @@ def update_header_from_input(filename, input_list):
     if len(hdu_out[0].header['DESCRIP']) > 67:
         raise ValueError('DESCRIP is too long! {}'.format(hdu_out[0].header['DESCRIP']))
 
-    hdu_out[0].header.add_comment('Reference file created by %s' % __name__ )
+    hdu_out[0].header.add_comment('Reference file created by %s and version %s' % (__name__, pkg_resources.require('refstis')[0].version) )
 
     hdu_out[0].header.add_history('Super{} image, combination of {} input {} frames taken in'.format(targname.lower(),
                                                                                                      nimsets,
