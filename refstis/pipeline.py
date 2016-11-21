@@ -335,11 +335,16 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
             print filename, fits.getval(filename, 'BINAXIS1'), fits.getval(filename, 'BINAXIS2')
     #raise # AER 25 oct 2016
 
+    print '************RAWFILES*************' # AER 21 Nov 2016
+    print('raw_files:', raw_files) #AER 18 Oct 2016
+    print('len(raw_files) = ', len(raw_files))
+
     basebias_name = os.path.join(root_folder, 'basebias.fits')
     if os.path.exists(basebias_name):
         print('{} already exists, skipping')
     else:
         basejoint.make_basebias(raw_files, basebias_name)
+        print '************RAWFILES*************' # AER 21 Nov 2016
         print('raw_files:', raw_files) #AER 18 Oct 2016
 
 
@@ -369,6 +374,10 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
 
         weekbias_name = os.path.join(folder,
                                      'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk))
+        print '*************************************' # AER 21 Nov 2016
+        print weekbias_name # AER 21 Nov 2016
+        print '*************************************' # AER 21 Nov 2016
+        #raise # AER 21 Nov 2016
         if os.path.exists(weekbias_name):
             print('{} already exists, skipping')
             continue
@@ -376,6 +385,7 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
         #make weekbias if too few imsets
 
         if n_imsets < bias_threshold[(gain, xbin, ybin)]:
+            print '***************** MADE IT HERE *****************' # AER 17 Nov 2017
             weekbias.make_weekbias(raw_files, weekbias_name, basebias_name)
         else:
             if n_imsets > 120:
@@ -385,11 +395,13 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
                     subname = weekbias_name.replace('.fits', '_grp0'+str(i+1)+'.fits')
                     print('Making sub-file for datasets')
                     print(sub_list)
+                    print '***************** MADE IT HERE *****************' # AER 17 Nov 2017
                     refbias.make_refbias(sub_list, subname)
                     all_subnames.append(subname)
                 functions.refaver(all_subnames, weekbias_name)
 
             else:
+                print '***************** MADE IT HERE *****************' # AER 17 Nov 2017
                 refbias.make_refbias(raw_files, weekbias_name)
 
 
@@ -410,7 +422,13 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
                                      wk,
                                      'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk))
 
+
+
         raw_files = glob.glob(os.path.join(folder, '*raw.fits'))
+        print '*********************************************' # AER 21 Nov 2016
+        print folder, len(raw_files) # AER 21 Nov 2016
+        print '*********************************************' # AER 21 Nov 2016
+        raise # AER 21 Nov 2016
         for item in raw_files:
             print("bias subtracting")
             flt_name = functions.bias_subtract_data(item, weekbias_name)
@@ -439,6 +457,11 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
                                      'biases/1-1x1',
                                      wk,
                                      'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk))
+        print '***********************************************' # AER 21 Nov 2016
+        print weekbias_name # AER 21 Nov 2016
+        print '***********************************************' # AER 21 Nov 2016
+        raise
+
         basedark_name = os.path.join(folder, 'basedark_%s_%s_%s.fits'%(proposal, visit, wk))
 
         if not os.path.exists(basedark_name):

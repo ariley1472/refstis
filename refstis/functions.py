@@ -402,7 +402,6 @@ def crreject(input_file, workdir=None):
                     print()
                     with open(trailerfile) as tr:
                         for line in tr.readlines():
-                            print('THIS IS WHY THIS IS ABOUT TO CRASH:')
                             print('    {}'.format(line.strip()))
                 finally:
                     raise Exception('BASIC2D failed to properly reduce {}'.format(input_file))
@@ -413,8 +412,10 @@ def crreject(input_file, workdir=None):
         print('Performing OCRREJECT')
         status = ocrreject(input=output_blev,
                            output=output_crj,
-                           verbose=False,
+                           verbose=True, # AER 15 nov 2016: Changed from false to true
                            trailer=trailerfile)
+        print('OCRREJECT performed, status = {}'.format(status))
+        #raise # AER 17 Nov 2017
         if status != 0:
             try:
                 print()
