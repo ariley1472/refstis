@@ -378,6 +378,10 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
                                      'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk))
 
         raw_files = glob.glob(os.path.join(folder, '*raw.fits'))
+        print('**********RAWFILES*********') # AER 21 Nov 2016
+        print(raw_files) # AER 21 Nov 2016
+        print('***************************') # AER 21 Nov 2016
+        #raise
         for item in raw_files:
             print("bias subtracting")
             flt_name = functions.bias_subtract_data(item, weekbias_name)
@@ -412,6 +416,7 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
             basedark.make_basedark(all_flt_darks, basedark_name, weekbias_name)
 
         basedark_name = last_basedark or basedark_name
+        print 'BLAH HERE' # AER 21 Nov 2016
         weekdark.make_weekdark(raw_files,
                                weekdark_name,
                                basedark_name,
@@ -912,7 +917,7 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
             for root, directories, files_all in os.walk(all_anneals):
                 #print directories
                 if not directories:
-                    fltfiles = glob.glob(''.join([root, '/*_flt.fits'])) 
+                    fltfiles = glob.glob(''.join([root, '/*_flt.fits']))
                     if len(fltfiles) != 0:
                         onefile = np.sort(fltfiles)[0]
                         obsdate = fits.getval(onefile, 'TDATEOBS', ext = 0)
