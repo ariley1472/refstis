@@ -335,9 +335,9 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
             print filename, fits.getval(filename, 'BINAXIS1'), fits.getval(filename, 'BINAXIS2')
     #raise # AER 25 oct 2016
 
-    print '************RAWFILES*************' # AER 21 Nov 2016
-    print('raw_files:', raw_files) #AER 18 Oct 2016
-    print('len(raw_files) = ', len(raw_files))
+    #print '************RAWFILES*************' # AER 21 Nov 2016
+    #print('raw_files:', raw_files) #AER 18 Oct 2016
+    #print('len(raw_files) = ', len(raw_files))
 
     basebias_name = os.path.join(root_folder, 'basebias.fits')
     if os.path.exists(basebias_name):
@@ -426,7 +426,9 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
 
         raw_files = glob.glob(os.path.join(folder, '*raw.fits'))
         print '*********************************************' # AER 21 Nov 2016
-        print folder, len(raw_files) # AER 21 Nov 2016
+        print folder
+        print len(raw_files) # AER 21 Nov 2016
+        print raw_files
         print '*********************************************' # AER 21 Nov 2016
         raise # AER 21 Nov 2016
         for item in raw_files:
@@ -879,8 +881,6 @@ Procedure
 ------------------------------------
 1: pass
 
-2: pass
-
 ------------------------------------
 ''' ) )
 
@@ -928,7 +928,7 @@ def run(config_file='refstis_config.yaml'): # AER 10 Nov 2016: changed from conf
 
     print(args)
 
-    #-- start pipeline configuration
+    # start pipeline configuration
     print(os.path.abspath(config_file))
     if not os.path.exists(config_file):
         raise IOError("Can't open configure file: {}".format(config_file))
