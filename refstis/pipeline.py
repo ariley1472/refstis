@@ -43,7 +43,8 @@ def get_new_periods(products_directory, settings):
 
     table_id_all = [row[0] for row in all_info]
     proposal_id_all = [row[1] for row in all_info]
-    visit_id_all = [int(row[2]) for row in all_info]
+    print 'type visit:', type(row[2]), type(row[2][0])
+    visit_id_all = [str(row[2]) for row in all_info]#[int(row[2]) for row in all_info]
     anneal_start_all = [row[3] for row in all_info]
     anneal_end_all = [row[4] for row in all_info]
 
@@ -220,7 +221,7 @@ def pull_info(foldername):
     """
 
     try:
-        proposal, visit = re.findall('([0-9]{5})_([0-9]{2})', foldername)[0]
+        proposal, visit = re.findall('([0-9]{5})_([0-9, A-Z]{2})', foldername)[0]
     except:
         proposal, visit = '', ''
 
@@ -327,6 +328,7 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
         print('Processing {}'.format(folder))
 
         proposal, wk, visit = pull_info(folder)
+        print 'folder:', folder
 
         raw_files = glob.glob(os.path.join(folder, '*raw.fits'))
         n_imsets = functions.count_imsets(raw_files)
@@ -804,7 +806,17 @@ Description
 
 Locations
 ------------------------------------
-  Product directory = EMPTY
+  Product directory = /grp/hst/stis/darks_biases/refstis_new/
+  Retrieval directory = /grp/hst/stis/darks_biases/refstis_new/data/
+  Delivery directory = /grp/hst/stis/darks_biases/refstis_new/delivered/
+
+Arguments
+------------------------------------
+-r, --redo_all: Re-runs the analysis on all past anneal months. Default = False
+-c, --no_collect: Turn off data collection function. Default = True
+-p, --plots_only: Only remake plots and update the website. Default = False
+-u, --user_information: Info string needed to request data. Default = None
+-m, --reprocess_month: Which dates during which you'd like to process. Default = None
 
 Procedure
 ------------------------------------
@@ -853,7 +865,7 @@ Procedure
 #-----------------------------------------------------------------------
 
 def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config.yaml
-    """Run the reference file pipeline """
+    """Run the reference file pipeline.""" #config_refstis.yaml is located in /home/ariley/ in plhstins2.
 
     args = parse_args()
 
