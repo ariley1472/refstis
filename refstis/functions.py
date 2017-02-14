@@ -2,6 +2,7 @@ from astropy.io import fits as pyfits
 from astropy.stats import sigma_clipped_stats
 import numpy as np
 import os
+import pkg_resources
 import shutil
 from scipy.signal import medfilt
 from scipy.ndimage.filters import median_filter
@@ -152,7 +153,11 @@ def update_header_from_input(filename, input_list):
     if len(hdu_out[0].header['DESCRIP']) > 67:
         raise ValueError('DESCRIP is too long! {}'.format(hdu_out[0].header['DESCRIP']))
 
-    hdu_out[0].header.add_comment('Reference file created by %s' %__name__ )
+#<<<<<<< HEAD
+    #hdu_out[0].header.add_comment('Reference file created by %s' %__name__ )
+#=======
+    hdu_out[0].header.add_comment('Reference file created by %s and version %s' % (__name__, pkg_resources.require('refstis')[0].version) )
+#>>>>>>> allyssa_refstis
 
     hdu_out[0].header.add_history('Super{} image, combination of {} input {} frames taken in'.format(targname.lower(),
                                                                                                      nimsets,
@@ -402,6 +407,7 @@ def crreject(input_file, workdir=None):
                     print()
                     with open(trailerfile) as tr:
                         for line in tr.readlines():
+                            print('HERE IS WHY THIS IS ABOUT TO CRASH:') # AER 9 Nov 2016
                             print('    {}'.format(line.strip()))
                 finally:
                     raise Exception('BASIC2D failed to properly reduce {}'.format(input_file))
@@ -500,6 +506,7 @@ def get_keyword(file_list,keyword,ext=0):
     """
 
     kw_set = set([pyfits.getval(item,keyword,ext=ext) for item in file_list])
+    print 'kw_set:', kw_set
     assert len(kw_set) == 1,' multiple values found for kw: % s'% (keyword)
 
     return list(kw_set)[0]

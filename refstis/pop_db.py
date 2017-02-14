@@ -15,7 +15,39 @@ import glob
 anneal_dir = '/grp/hst/stis/calibration/monitors/ccd/anneals/'
 
 #-------------------------------------------------------------------------------
+def base36encode(number): #AER 24 Jan 2017: added this function. thanks Sean!
+    """Converts an integer to a base36 string.
+    Based on http://stackoverflow.com/a/1181922/6377060"""
+    import string
 
+    if not isinstance(number, (int, long)):
+        raise TypeError('number must be an integer')
+
+    alphabet = string.digits + string.lowercase
+
+    base36 = ''
+    sign = ''
+
+    if number < 0:
+        sign = '-'
+        number = -number
+
+    if 0 <= number < len(alphabet):
+        return sign + '0' + alphabet[number].upper()
+
+    while number != 0:
+        number, i = divmod(number, len(alphabet))
+        base36 = alphabet[i] + base36
+
+    return sign + base36.upper()
+
+#-------------------------------------------------------------------------------
+def base36decode(number): #AER 24 Jan 2017: added this function. thanks Sean!
+    return int(number, 36)
+
+#print base36encode( base36decode('0C') - 1 )
+
+#-------------------------------------------------------------------------------
 def get_directories():
     """ Loop over the anneal monitor directory and return list of directories
     containing anneal observations
@@ -28,15 +60,15 @@ def get_directories():
     """
 
     directories = []
-    for year in range(2011, 2020):   #AER 21 Oct 2016: for year in range(2011, 2020): #change back to 1996 to create older darks
+    for year in range(1996, 2020):   #change back to 1996 to create older darks
         for month in ('01', '02', '03', '04', '05', '06',
                       '07', '08', '09', '10', '11', '12'):
             for last in ('/', 'a/', 'b/'):
                 path = anneal_dir + str(year) + '_' + month + last
-                if os.path.exists(path) and path != anneal_dir+'2010_01/': # Is there are reason it can't be 2010_01?
-                    crj_list = glob.glob(path + '?????????_crj.fits') #get crj files
+                if os.path.exists(path) and path != anneal_dir+'2010_01/':
+                    crj_list = glob.glob(path + '?????????_crj.fits')
                     crj_list.sort()
-                    if len(crj_list) == 2: #one for before the anneal and one for after
+                    if len(crj_list) == 2:
                         print(path)
                         directories.append( path )
     return directories
@@ -56,18 +88,23 @@ def grab_anneal_mjds():
 
     print('Getting anneal information')
     anneal_info = []
-    for directory in get_directories(): #for each directory with anneal observations in it,
+    for directory in get_directories():
         anneal_obs = glob.glob( os.path.join(directory, '?????????_crj.fits') )
         anneal_obs.sort()
-        if len(anneal_obs) != 2: #if there are not 2 crj files (1 for before the anneal and another for after),
-            print('Error in ', directory) #throw an error
-            continue #and move on.
+        if len(anneal_obs) != 2:
+            print('Error in ', directory)
+            continue
 
-        # Get information from each observation for the anneal database.
         proposid = pyfits.getval( anneal_obs[0], 'PROPOSID', ext=0 )
-        visit_number = int(pyfits.getval(anneal_obs[1], 'OBSET_ID')) - 1
+        print 'proposid:', proposid
         anneal_start = pyfits.getval(anneal_obs[0], 'TEXPSTRT', ext=0)
         anneal_end = pyfits.getval(anneal_obs[1], 'TEXPSTRT', ext=0)
+
+        # AER 25 Jan 2017: Added the following. Hopefully it works!
+        if proposid < 14822:
+            visit_number = '{:02.0f}'.format(int(pyfits.getval(anneal_obs[1], 'OBSET_ID')) - 1)
+        else:
+            visit_number = base36encode( base36decode(pyfits.getval(anneal_obs[1], 'OBSET_ID')) - 1 )#AER 24 Jan 2017: changed from int() to base36encode( base36decode())
 
 
         anneal_info.append( (proposid, visit_number, anneal_start, anneal_end) )
@@ -96,10 +133,10 @@ def pop_database(anneal_info):
     c = db.cursor()
     table = 'anneals'
     try:
-        c.execute("""CREATE TABLE %s (id integer PRIMARY KEY, proposid integer, visit real, start real, end real)""" % (table))
+        c.execute("""CREATE TABLE %s (id integer PRIMARY KEY, proposid integer, visit text, start real, end real)""" % (table)) # AER 23 Jan 2017: Changed visit from real to text
     except sqlite3.OperationalError:
         c.execute("""DROP TABLE %s""" % (table))
-        c.execute("""CREATE TABLE %s (id integer PRIMARY KEY, proposid integer, visit real, start real, end real)""" % (table))
+        c.execute("""CREATE TABLE %s (id integer PRIMARY KEY, proposid integer, visit text, start real, end real)""" % (table)) # AER 23 Jan 2017: Changed visit from real to text
 
     for i, line in enumerate(anneal_info):
         proposid = line[0]
@@ -119,7 +156,7 @@ def pop_database(anneal_info):
 
 def main():
     """ Main function to retrieve anneal info and populate database """
-    anneal_stats = grab_anneal_mjds() # Gets important anneal information.
+    anneal_stats = grab_anneal_mjds()
     pop_database(anneal_stats)
 
 #-------------------------------------------------------------------------------
