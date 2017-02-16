@@ -44,7 +44,7 @@ def get_new_periods(products_directory, settings):
 
     table_id_all = [row[0] for row in all_info]
     proposal_id_all = [row[1] for row in all_info]
-    visit_id_all = [int(row[2]) for row in all_info]
+    visit_id_all = [str(row[2]) for row in all_info]
     anneal_start_all = [row[3] for row in all_info]
     anneal_end_all = [row[4] for row in all_info]
 

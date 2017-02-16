@@ -363,6 +363,8 @@ def crreject(input_file, workdir=None):
         crcorr = hdu[0].header['crcorr']
         blevcorr = hdu[0].header['blevcorr']
 
+    print('**************MADE IT!!***************') #AER 15 Feb 2017
+
     if (nimset <= 1 and crcorr != "COMPLETE"):
         print("Sorry, your input image seems to have only 1 imset, but it isn't cr-rejected.")
         print("This task can only handle 'raw' or 'flt images with the NEXTEND keyword equal to 3*N (N > 1).")
@@ -381,6 +383,8 @@ def crreject(input_file, workdir=None):
         if (blevcorr != 'COMPLETE') :
             print('Performing BLEVCORR')
             pyfits.setval(input_file, 'BLEVCORR', value='PERFORM')
+            #print('********* MADE IT HERE TOO!!!!!**********') #AER 15 Feb 2017
+
             status = basic2d(input_file,
                              output_blev,
                              outblev='',
@@ -397,9 +401,14 @@ def crreject(input_file, workdir=None):
                              statflag=False,
                              verbose=False,
                              trailer=trailerfile)
+            #print '**********yadda yadda yadda***********' # AER 15 Feb 2017
+            print 'status:', status #AER 15 Feb 2017
+            #raise
             if status != 0:
                 try:
                     print()
+                    #print('I am in this if-try-finally loop thing because status =/= 0') # AER 16 Feb 2017
+                    #raise
                     with open(trailerfile) as tr:
                         for line in tr.readlines():
                             print('    {}'.format(line.strip()))
