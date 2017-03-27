@@ -394,7 +394,7 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
         print('Processing {}'.format(folder))
         raw_files = glob.glob(os.path.join(folder, '*flt.fits'))
         n_imsets = functions.count_imsets(raw_files)
-
+        
         gain = functions.get_keyword(raw_files, 'CCDGAIN', 0)
         xbin = functions.get_keyword(raw_files, 'BINAXIS1', 0)
         ybin = functions.get_keyword(raw_files, 'BINAXIS2', 0)
