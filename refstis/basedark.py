@@ -71,7 +71,7 @@ def find_hotpix(filename):
 
     Parameters
     ----------
-    
+
     filename: str
         filename of the input biasfile
 

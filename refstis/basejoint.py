@@ -269,6 +269,10 @@ def make_basebias(input_list, refbias_name='basebias.fits'):
     print('#-------------------------------#')
     print('Output to %s' % refbias_name)
 
+    for f in input_list: #AER 29 Mar 2017
+        print f, fits.getval(f, 'TDATEOBS'), fits.getval(f, 'BINAXIS1'), fits.getval(f, 'BINAXIS2')
+
+
     print('Processing individual files')
     crj_list = [calibrate(item) for item in input_list]
     crj_list = [item for item in crj_list if item != None]

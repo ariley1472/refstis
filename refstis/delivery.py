@@ -180,7 +180,6 @@ def regress(folder):
     print('Running regression for')
     print(folder)
     print('#------------------#')
-    raise # AER 2 Nov 2016
 
     monitor_dir = '/grp/hst/stis/darks_biases'
     test_suite = os.path.join(monitor_dir, 'test_suite')
@@ -293,7 +292,7 @@ def send_forms(folder):
     today = str(today_obj.month) + '/' + \
         str(today_obj.day) + '/' + str(today_obj.year)
     message = '1-Name of deliverer: Allyssa Riley\n'
-    message += ' (other e-mail addresses) debes@stsci.edu,\n'
+    message += ' (other e-mail addresses) lockwood@stsci.edu, debes@stsci.edu\n'
     message += '\n'
     message += ' 2-Date of delivery: ' + today + '\n'
     message += '\n'
@@ -336,7 +335,7 @@ def send_forms(folder):
     message += '     of compare_table.pro. N/A\n'
     message += '\n'
     message += ' 12-Please indicate which modes (e.g. all the STIS, FUVMAMA, E140L modes) are affected by\n'
-    message += '     the changes in the file.  All CCD modes are affected \n'
+    message += '     the changes in the file.  All CCD modes are affected. \n'
     message += '\n'
     message += ' 13-Description of how the files were "tested" for correctness: Used calstis v {} \n'.format(stistools.calstis.__version__ )
     message += ' to reduce a test suite of CCD data and reduced a test suite of dark images as if \n'
