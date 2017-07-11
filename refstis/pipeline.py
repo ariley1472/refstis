@@ -989,10 +989,11 @@ def run(config_file='refstis_config.yaml'): # AER 10 Nov 2016: changed from conf
                         print('*********************************')
                         continue
                     obsdate = fits.getval(onefile, 'TDATEOBS', ext = 0)
-                    #print('obsdate:', obsdate) #AER 12 Oct 2016
+                    print('obsdate:', obsdate) #AER 12 Oct 2016
                     if (obsdate <= args.reprocess_month[1] and obsdate >= args.reprocess_month[0]):
                         filestoprocess.append(root)
-        #print 'filestoprocess:', filestoprocess
+
+        print 'filestoprocess:', filestoprocess
         folders1 = []
         for f in filestoprocess:
             #print '/'.join(f.split('/')[:7])
