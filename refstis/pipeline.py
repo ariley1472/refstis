@@ -299,7 +299,10 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
     print('###################')
     print(' make the basebias ')
     print('###################')
-    raw_files = []
+
+    raw_files1 = [] # AER 25 Oct. 2016: Changed this to 1
+    raw_files = [] # AER 25 Oct 2016: To hold the files with 1x1 binning
+    remove_files = [] # AER 25 Oct 2016: remove all files without 1x1 binning?
 
     for root, dirs, files in os.walk(os.path.join(root_folder, 'biases')):
         if not '1-1x1' in root:
@@ -307,13 +310,35 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
 
         for filename in files:
             if filename.startswith('o') and filename.endswith('_raw.fits'):
-                raw_files.append(os.path.join(root, filename))
+                raw_files1.append(os.path.join(root, filename)) # AER 25 Oct 2016: Changed this to 1
 
+        #AER 25 Oct 2016: Filter out the binning that is not 1x1
+        for f in raw_files1:
+            print f, fits.getval(f, 'BINAXIS1'), fits.getval(f, 'BINAXIS2')
+            if fits.getval(f, 'BINAXIS1') == 1 and fits.getval(f, 'BINAXIS2') == 1:
+                raw_files.append(f)
+            else:
+                remove_files.append(f)
+                #print('IN REMOVED_FILES:', f)
+
+        #AER 25 Oct 2016: Just as a check. Can probably just comment this out
+        print '-------RAW FILES-------'
+        print raw_files
+        print '---------END-----------'
+        for filename in raw_files:
+            print(filename, fits.getval(filename, 'BINAXIS1'), fits.getval(filename, 'BINAXIS2'), fits.getval(filename, 'CCDGAIN'))
+
+
+        #raise Exception('is the filter even working?!') # AER 28 Mar 2017: an honest question.
+
+    raw_files = np.unique(raw_files) # AER 30 Mar 2017: Hopefully this works?
     basebias_name = os.path.join(root_folder, 'basebias.fits')
     if os.path.exists(basebias_name):
-        print('{} already exists, skipping')
+        print('{} already exists, skipping'.format(basebias_name))
     else:
         basejoint.make_basebias(raw_files, basebias_name)
+        #print('************RAWFILES*************') # AER 21 Nov 2016
+        #print('raw_files:', raw_files) #AER 18 Oct 2016
 
     print('#######################')
     print(' make the weekly biases')
@@ -336,12 +361,19 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
         raw_files = glob.glob(os.path.join(folder, '*raw.fits'))
         n_imsets = functions.count_imsets(raw_files)
 
+        #print('*********RAW FILES********') # AER 27 Mar 2017
+        #for f in raw_files: # AER 27 Mar 2017
+            #print f, fits.getval(f, 'CCDGAIN') # AER 27 Mar 2017
+
         gain = functions.get_keyword(raw_files, 'CCDGAIN', 0)
-        xbin = functions.get_keyword(raw_files, 'BINAXIS1', 0)
-        ybin = functions.get_keyword(raw_files, 'BINAXIS2', 0)
+        xbin = functions.get_keyword(raw_files, 'BINAXIS1', 0) # = 1 if my for loop above worked AER 25 Oct 2016
+        ybin = functions.get_keyword(raw_files, 'BINAXIS2', 0) # = 1 if my for loop above worked AER 25 Oct 2016
 
         weekbias_name = os.path.join(folder,
                                      'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk))
+        #print '*************************************' # AER 21 Nov 2016
+        #print weekbias_name # AER 21 Nov 2016
+        #print '*************************************' # AER 21 Nov 2016
         if os.path.exists(weekbias_name):
             print('{} already exists, skipping')
             continue
@@ -414,8 +446,7 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
         weekbias_name = os.path.join(root_folder,
                                      'biases/1-1x1',
                                      wk,
-                                     'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk)) #weekbias has already been created
-        basedark_name = os.path.join(folder, 'basedark_%s_%s_%s.fits'%(proposal, visit, wk))
+                                     'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk)) #weekbias has already been created        basedark_name = os.path.join(folder, 'basedark_%s_%s_%s.fits'%(proposal, visit, wk))
 
         if not os.path.exists(basedark_name):
             basedark.make_basedark(all_flt_darks, basedark_name, weekbias_name)
@@ -565,7 +596,7 @@ def collect_new(observations_to_get, settings):
     killed = False
 
     while not done:
-        print("waiting for files to be delivered")
+        print("waiting for files to be delivered") # Print this every 60 seconds
         time.sleep(60)
         done, killed = everything_retrieved(tracking_id)
 
@@ -595,6 +626,8 @@ def separate_period(base_dir):
     if not len(all_files):
         print("nothing to move")
         return
+    for f in all_files: #AER 18 Oct 2016
+        print f, fits.getval(f, 'EXPSTART', ext = 1) #AER 18 Oct 2016
 
     mjd_times = np.array([fits.getval(item, 'EXPSTART', ext=1) for item in all_files])
 
@@ -764,6 +797,15 @@ def separate_obs(base_dir, month_begin, month_end):
             obs_to_move = [item for item in obs_list if
                             ((fits.getval(item, 'EXPSTART', ext=1) >= begin) and
                              (fits.getval(item, 'EXPSTART', ext=1) < end))]
+            #AER 24 Oct 2016: Added this here? Don't know if it'll work
+            obs_to_move = [item for item in obs_to_move1 if
+                            ((fits.getval(item, 'BINAXIS1') == 1) and
+                            (fits.getval(item, 'BINAXIS2') == 1))]
+
+            for i in obs_to_move:
+                print i, fits.getval(i, 'BINAXIS1'), fits.getval(i, 'BINAXIS2')
+            raise
+
 
             if not len(obs_to_move):
                 print('error, empty list to move')
@@ -938,20 +980,31 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
             for root, directories, files_all in os.walk(all_anneals):
                 print(directories)
                 if not directories:
-                    fltfiles = glob.glob(''.join([root, '/*_flt.fits']))
-                    if len(fltfiles) != 0:
+                    fltfiles = glob.glob(''.join([root, '/*_raw.fits'])) #AER 18 oct 2016: Changed flt to raw files
+                    print("len flt files:", len(fltfiles)) #AER 12 Oct 2016
+                    try:
                         onefile = np.sort(fltfiles)[0]
-                        obsdate = fits.getval(onefile, 'TDATEOBS', ext = 0)
-                        if (obsdate <= args.reprocess_month[1] and obsdate >= args.reprocess_month[0]):
-                            filestoprocess.append(root)
-        print('filestoprocess:  {}'.format(filestoprocess))
+                    except: # AER 18 oct 2016: I believe this would throw an exception only if the length of the list is none.
+                        print('*********************************')
+                        print('ERROR: NO FLT FILES HERE')
+                        print('*********************************')
+                        continue
+                    obsdate = fits.getval(onefile, 'TDATEOBS', ext = 0)
+                    print('obsdate:', obsdate) #AER 12 Oct 2016
+                    if (obsdate <= args.reprocess_month[1] and obsdate >= args.reprocess_month[0]):
+                        filestoprocess.append(root)
+
+        print 'filestoprocess:', filestoprocess
         folders1 = []
         for f in filestoprocess:
             print('/'.join(f.split('/')[:7]))
             folders1.append('/'.join(f.split('/')[:7]))
         all_folders = set(folders1)
+        print all_folders
+        #raise Exception('Some sort of error')
 
         for folder in all_folders:
+            print 'Folder:', folder # AER 27 Mar 2017
             make_pipeline_reffiles(folder)
             tail = folder.rstrip(os.sep).split(os.sep)[-1]
             destination = os.path.join(data['delivery_directory'], tail)

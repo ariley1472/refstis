@@ -153,7 +153,11 @@ def update_header_from_input(filename, input_list):
     if len(hdu_out[0].header['DESCRIP']) > 67:
         raise ValueError('DESCRIP is too long! {}'.format(hdu_out[0].header['DESCRIP']))
 
+#<<<<<<< HEAD
+    #hdu_out[0].header.add_comment('Reference file created by %s' %__name__ )
+#=======
     hdu_out[0].header.add_comment('Reference file created by %s and version %s' % (__name__, pkg_resources.require('refstis')[0].version) )
+#>>>>>>> allyssa_refstis
 
     hdu_out[0].header.add_history('Super{} image, combination of {} input {} frames taken in'.format(targname.lower(),
                                                                                                      nimsets,
@@ -356,6 +360,7 @@ def crreject(input_file, workdir=None):
     trailerfile = os.path.join(path, name+'_crreject_log.txt')
 
     output_blev = input_file.replace('.fits','_blev.fits')
+
     output_crj = input_file.replace('.fits','_crj.fits')
 
     with pyfits.open(input_file) as hdu:
@@ -382,6 +387,7 @@ def crreject(input_file, workdir=None):
         if (blevcorr != 'COMPLETE') :
             print('Performing BLEVCORR')
             pyfits.setval(input_file, 'BLEVCORR', value='PERFORM')
+
             status = basic2d(input_file,
                              output_blev,
                              outblev='',
@@ -398,14 +404,15 @@ def crreject(input_file, workdir=None):
                              statflag=False,
                              verbose=False,
                              trailer=trailerfile)
+            print 'status:', status #AER 15 Feb 2017
             if status != 0:
                 try:
                     print()
-                    with open(trailerfile) as tr:
-                        for line in tr.readlines():
-                            print('    {}'.format(line.strip()))
+                    #with open(trailerfile) as tr:
+                        #for line in tr.readlines():
+                            #print('    {}'.format(line.strip()))
                 finally:
-                    raise Exception('BASIC2D failed to properly reduce {}'.format(input_file))
+                    raise Exception('BASIC2D failed to properly reduce {}, status = {}'.format(input_file, status))
         else:
             print('Blevcorr already Performed')
             shutil.copy(input_file,output_blev)
@@ -413,16 +420,21 @@ def crreject(input_file, workdir=None):
         print('Performing OCRREJECT')
         status = ocrreject(input=output_blev,
                            output=output_crj,
-                           verbose=False,
+                           verbose=True, # AER 28 Mar 2017: changed from False
                            trailer=trailerfile)
+        print('OCRREJECT performed, status = {}'.format(status))
+
         if status != 0:
             try:
                 print()
-                with open(trailerfile) as tr:
-                    for line in tr.readlines():
-                        print('    {}'.format(line.strip()))
+                #with open(trailerfile) as tr: # AER 28 Mar 2017: Commented these lines out, just to see
+                    #for line in tr.readlines():
+                        #print('    {}'.format(line.strip()))
             finally:
-                raise Exception('OCRREJECT failed to properly reduce {}'.format(output_blev))
+                raise Exception('OCRREJECT failed to properly reduce {}, status = {}, output = {}'.format(output_blev, status, output_crj))#output_blev)) # AER 27 Mar 2017: Changed this to status
+
+
+
 
     elif (crcorr == "COMPLETE"):
         print("CR rejection already done")
@@ -493,12 +505,13 @@ def count_imsets(file_list):
 def get_keyword(file_list,keyword,ext=0):
     """ return the value from a header keyword over a list of files
 
-    if the value is not consistent accross the input files, an assertion error
+    if the value is not consistent across the input files, an assertion error
     will be raised
 
     """
 
     kw_set = set([pyfits.getval(item,keyword,ext=ext) for item in file_list])
+    print 'kw_set:', kw_set
     assert len(kw_set) == 1,' multiple values found for kw: % s'% (keyword)
 
     return list(kw_set)[0]
@@ -603,19 +616,27 @@ def figure_number_of_periods(number_of_days, mode) :
 
     # WK mode
     if mode == "WK":
+        print('MODE = WK') # AER 29 Mar 2017
         for n in range(2, number_of_days) :
             if  number_of_days < 12 :
+                print('NUMBER OF DAYS < 12 = {}'.format(number_of_days)) # AER 29 Mar 2017
                 if (number_of_days >  MAX_DAYS_IN_WK or
                     number_of_days <  MIN_DAYS_IN_WK) :
                     # raises an ERROR
+                    print('NUMBER OF DAYS IS EITHER TOO LARGE OR TOO SMALL') # AER 29 MAR 2017
                     number_of_periods = -1
+                    print('NUMBER OF PERIODS = {}'.format(number_of_periods))# AER 29 Mar 2017
                     break
                 else :
                     number_of_periods = PERIOD_NUMBER_START
+                    print('NUMBER OF PERIODS = {}'.format(number_of_periods))# AER 29 Mar 2017
                     break
 
             elif number_of_days <= DELTA_WK * n :
+                print('DELTA_WK * n = {}'.format(DELTA_WK * n))
+                print('NUMBER OF DAYS > 12 = {}'.format(number_of_days))# AER 29 Mar 2017
                 number_of_periods = PERIOD_NUMBER_START + ( n - 1 )
+                print('NUMBER OF PERIODS = {}'.format(number_of_periods))# AER 29 Mar 2017
                 # For easier comparison to periods.py
                 if number_of_days > 72 :
                     msg = "length of anneal month = " +str(number_of_days)+ "; For real? "
@@ -630,15 +651,24 @@ def figure_number_of_periods(number_of_days, mode) :
 
     # BIWK mode
     elif mode == 'BIWK':
+        print('MODE = BIWK') # AER 29 Mar 2017
         for n in range(2, number_of_days) :
             if number_of_days < MAX_DAYS_IN_BIWK :
+                print('NUMBER OF DAYS < 22 = {}') # AER 29 Mar 2017
                 # raises an ERROR if < MIN_DAYS_IN_BIWK1
-                if number_of_days < MIN_DAYS_IN_BIWK : number_of_periods = -1
-                else : number_of_periods = PERIOD_NUMBER_START
+                if number_of_days < MIN_DAYS_IN_BIWK :
+                    number_of_periods = -1
+                    print('NUMBER OF PERIODS = {}'.format(number_of_periods))# AER 29 Mar 2017
+                else :
+                    number_of_periods = PERIOD_NUMBER_START
+                    print('NUMBER OF PERIODS = {}'.format(number_of_periods))# AER 29 Mar 2017
                 break
 
+
             elif number_of_days <= DELTA_BIWK * n :
+                print('NUMBER OF DAYS <= DELTA_BIWK*N --> {} <= {}'.format(number_of_days, DELTA_BIWK*n)) # AER 29 Mar 2017
                 number_of_periods = PERIOD_NUMBER_START + ( n - 1 )
+                print('NUMBER OF PERIODS = {}'.format(number_of_periods)) # AER 29 Mar 2017
                 # For easier comparison to periods.py
                 if number_of_days > 72 :
                     msg = "length of anneal month = " +str(number_of_days)+ "; For real? "
@@ -652,7 +682,7 @@ def figure_number_of_periods(number_of_days, mode) :
                 break
     else:
         sys.exit('what mode did you put in?')
-
+    raise Exception('This is after we figured out number of days and periods...')
     # return value
     #print "return number_of_periods =",  number_of_periods
     return number_of_periods
@@ -1036,6 +1066,7 @@ def bias_subtract_data(filename, biasfile):
             print()
             with open(trailerfile) as tr:
                 for line in tr.readlines():
+                    #print('THE FOLLOWING IS WHY THIS IS ABOUT TO CRASH:')
                     print('    {}'.format(line.strip()))
         finally:
             raise Exception('BASIC2D failed to properly reduce {}'.format(filename))

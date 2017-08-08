@@ -85,8 +85,10 @@ def make_refbias(input_list, refbias_name='refbias.fits'):
     functions.msjoin(input_list, joined_out)
 
     print('Checking for cosmic ray rejection')
+    #raise # AER 17 Nov 2017
     crj_filename = functions.crreject(joined_out)
 
+    print "!!!!!!!!!HUZZAH! MADE IT HERE!!!!!!!!" # AER 17 Nov 2017
     shutil.copy(crj_filename, refbias_name)
     flag_hot_pixels(refbias_name)
     functions.update_header_from_input(refbias_name, input_list)
@@ -97,5 +99,6 @@ def make_refbias(input_list, refbias_name='refbias.fits'):
     functions.RemoveIfThere(joined_out)
 
     print('refbias done for {}'.format(refbias_name))
+    raise
 
 #-------------------------------------------------------------------------------
