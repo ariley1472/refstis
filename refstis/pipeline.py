@@ -907,7 +907,7 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
         print("----------------------------------")
         print("Processing all past anneal months")
         print("----------------------------------")
-        #print 'all_folders:', all_folders
+        print('all_folders: {}'.format(all_folders))
         for folder in all_folders:
             make_pipeline_reffiles(folder)
             tail = folder.rstrip(os.sep).split(os.sep)[-1]
@@ -933,9 +933,10 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
 
 
         filestoprocess = []
-        print 'products_directory:', products_directory
+        print('products_directory:  {}'.format(products_directory))
         for all_anneals in glob.glob(''.join([products_directory, '?????_??/darks/'])):
             for root, directories, files_all in os.walk(all_anneals):
+                print(directories)
                 if not directories:
                     fltfiles = glob.glob(''.join([root, '/*_flt.fits']))
                     if len(fltfiles) != 0:
@@ -943,10 +944,10 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
                         obsdate = fits.getval(onefile, 'TDATEOBS', ext = 0)
                         if (obsdate <= args.reprocess_month[1] and obsdate >= args.reprocess_month[0]):
                             filestoprocess.append(root)
-
+        print('filestoprocess:  {}'.format(filestoprocess))
         folders1 = []
         for f in filestoprocess:
-            print '/'.join(f.split('/')[:7])
+            print('/'.join(f.split('/')[:7]))
             folders1.append('/'.join(f.split('/')[:7]))
         all_folders = set(folders1)
 
