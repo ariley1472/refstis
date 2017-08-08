@@ -291,65 +291,60 @@ def send_forms(folder):
     today_obj = date.today()
     today = str(today_obj.month) + '/' + \
         str(today_obj.day) + '/' + str(today_obj.year)
-    message = '1-Name of deliverer: Allyssa Riley\n'
-    message += ' (other e-mail addresses) debes@stsci.edu,\n'
+    message = '1. Name of deliverer: Allyssa Riley\n'
+    message += '    a. (other e-mail addresses) lockwood@stsci.edu, debes@stsci.edu\n'
     message += '\n'
-    message += ' 2-Date of delivery: ' + today + '\n'
+    message += ' 2. Date of delivery: ' + today + '\n'
     message += '\n'
-    message += ' 3-Instrument: STIS\n'
+    message += ' 3. Instrument: STIS\n'
     message += '\n'
-    message += ' 4-Type of file (bias,pht,etc.): bia, drk\n'
+    message += ' 4. Type of File(s) (example: Bias, Dark, etc.): bia, drk\n'
     message += '\n'
-    message += ' 5-Has HISTORY section in header [0] been updated to describe in detail\n'
-    message += '   why it is being delivered and how the file was created? (yes/no): yes\n'
+    message += ' 5. Has HISTORY section in the primary header been updated to describe in detail\n'
+    message += '    the reason for delivery and how the file(s) was(were) created? (yes/no): yes\n'
     message += '\n'
-    message += ' 6-USEAFTER, PEDIGREE, DESCRIP, and COMMENT have been checked? yes\n'
+    message += ' 6. USEAFTER, PEDIGREE, DESCRIP, and COMMENT, for HST files, have been checked?\n'
+    message += '    Special keywords for JWST too (See Header Keywords)?: yes\n'
+    message += '    a. Was the DESCRIP keyword updated with a summary of why the file was updated or created?\n'
+    message += '       (yes/no): yes\n'
+    message += '    b. If the reference files are replacing previous versions, do the new USEAFTER dates \n'
+    message += '       exactly match the old ones? N/A\n'
     message += '\n'
-    message += ' 6a-Was the DESCRIP keyword updated with a summary of why the file was updated or created? \n'
-    message += '   (yes/no) yes\n'
+    message += ' 7. Verification for compliance complete? (fits compliant, info_ref_files.py, certify, etc): yes\n'
     message += '\n'
-    message += ' 6b-If the reference files are replacing previous versions, do the new USEAFTER dates \n'
-    message += '    exactly match the old ones? N/A\n'
+    message += ' 8. Should these files be ingested in the DMS, Archive and CRDS databases? (If not clear or\n'
+    message += '    needs to go to CRDS-TEST first, indicate here): yes\n'
+    message += '    a. If files are pysynphot files, should they be delivered to ETC? N/A\n'
+    message += '    b. Are these JWST ETC files? no\n'
     message += '\n'
-    message += ' 7-CDBS Verification complete? (fitsverify,certify,etc.): yes\n'
+    message += ' 9. Files run through CALXXX in the latest versionused by the DMS pipeline of PYSYNPHOT and \n'
+    message += '    ETC? (yes/no and list the version used): yes, calstis v {} \n'.format(stistools.calstis.__version__ )
     message += '\n'
-    message += ' 8-Should these files be ingested in the OPUS, DADS and CDBS databases? yes\n'
-    message += '   (if not indicate it clearly which ones):\n'
+    message += ' 10. Does it replace an old reference file? (yes/no): no\n'
+    message += '     a. If yes, which one? \n'
+    message += '     b. If the file being replaced is bad, and should not be used with any data, please\n'
+    message += '        indicate this here:\n'
+    message += ' 11. Was a JIRA issue filed in regar to the references being delivered and/or their rmap? (yes/no): no\n'
+    message += '    a. If yes, please inclufe the JIRA issue number here:'
     message += '\n'
-    message += ' 8a-If files are synphot files, should they be delivered to ETC? N/A\n'
+    message += ' 12. What is the level of change of the file? (e.g. compared to old file it could be:\n'
+    message += '     SEVERE, MODERATE, TRIVIAL - Initial delivery of a reference file is always SEVERE: SEVERE\n'
+    message += '     a. If files are tables, please indicate exactly which rows have changed (for HST tables,\n'
+    message += '        please include the output from compare_table.py): N/A\n'
     message += '\n'
-    message += ' 9-Files run through CALXXX or SYNPHOT in the IRAF version of STSDAS and the IRAF* \n'
-    message += '   version used by the Archive pipeline? (yes/no): yes \n'
-    message += '   List the versions used:  calstis v {} \n'.format(stistools.calstis.__version__ )
+    message += ' 13. Please indicate which modes (e.g. all the STIS, FUVMAMA, E140L modes) are affected by\n'
+    message += '     the changes in the file:  All STIS CCD modes are affected \n'
     message += '\n'
-    message += ' 10-Does it replace an old reference file? (yes/no): no\n'
-    message += '\n'
-    message += ' 10a-If yes, which one? \n'
-    message += '     (If the file being replaced is bad, and should not be used with any data, please\n'
-    message += '      indicate this here.)\n'
-    message += '\n'
-    message += ' 11- What is the level of change of the file? (e.g. compared to old file it\n'
-    message += '     could be: SEVERE, MODERATE, TRIVIAL, 1\%, 5\% etc.): SEVERE\n'
-    message += '\n'
-    message += ' 11a-If files are tables, please indicate exactly which rows have changed. Show output \n'
-    message += '     of compare_table.pro. N/A\n'
-    message += '\n'
-    message += ' 12-Please indicate which modes (e.g. all the STIS, FUVMAMA, E140L modes) are affected by\n'
-    message += '     the changes in the file.  All CCD modes are affected \n'
-    message += '\n'
-    message += ' 13-Description of how the files were "tested" for correctness: Used calstis v {} \n'.format(stistools.calstis.__version__ )
+    message += ' 14. Description of how the files were "tested" for correctness: Used calstis v {} \n'.format(stistools.calstis.__version__ )
     message += ' to reduce a test suite of CCD data and reduced a test suite of dark images as if \n'
     message += ' they were science images. The reduced darks were significantly lower in median and \n'
     message += ' mean values. The CCD images were reduced to either flt, crj, x1d, x2d, sx1, and sx2 \n'
     message += ' as appropriate. \n'
     message += '\n'
-    message += ' 14-Additional Considerations: Some of the useafter dates DO NOT match the first date \n'
+    message += ' 15. Additional Considerations: Some of the useafter dates DO NOT match the first date \n'
     message += ' in the pedigree. This is fine as the pipeline that creates the superdarks and \n'
     message += ' superbiases pulls the dates and times from the anneal proposal.\n'
     message += '\n'
-    message += ' 15-Reason for delivery: New weekly biases and darks were created for the new anneal \n'
-    message += ' month and need to be delivered for GO observations. \n'
-    message += '\n '
 
     for search_string in ('*drk.fits', 'bias_wk*.fits', 'bias_bi*.fits'):
         file_list = glob.glob(search_string)
@@ -365,7 +360,7 @@ def send_forms(folder):
                 add_str = name + ' is for dates after ' + USEAFTER[i] + '\n '
             message += add_str
 
-    message += '\n\n 16-Disk location and name of files:\n'
+    message += '\n\n 16. Disk location and name of files (NOTE:Location should be: /grp/redcat/<instrument>_yyyy_mm_dd/):\n'
     message += os.getcwd() + '\n'
     os.system('ls -la *.fits > tmp.txt')
     tmp = open('tmp.txt', 'r')
@@ -373,6 +368,12 @@ def send_forms(folder):
     for line in lines:
         message += line
     os.remove('tmp.txt')
+
+
+    message += ' 17. Reason for delivery: New weekly biases and darks were created for the new anneal \n'
+    message += ' month and need to be delivered for GO observations. These files are available for STIS/CCD\n'
+    message += ' observations taken after \n'
+    message += '\n '
 
     delivery_form = open('deliveryform.txt', 'w')
     delivery_form.write(message)

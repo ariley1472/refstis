@@ -46,10 +46,16 @@ def update_sci(filename):
         only_hotpix = np.where(hdu[('sci', 1)].data >= fivesig,
                                hdu[('sci', 1)].data - im_mean,
                                0)
+                               # The above finds all entries greater than 5sigma
+                               #above mean, replaces everything ELSE (everything
+                               #less than 5sigma above the mean) in the array of
+                               #data minus mean with 0. Basically, makes a mask
+                               #where all of the hot pixels are un-masked, I guess.
+
 
 
         #-- I don't see this being used
-        med_im = median_filter(hdu[('sci', 1)].data, (3, 3))
+        med_im = median_filter(hdu[('sci', 1)].data, (3, 3)) #filters the data using a 3x3 kernel
         only_baseline = np.where(hdu[('sci', 1)].data >= fivesig,
                                  med_im,
                                  hdu[('sci', 1)].data)
@@ -64,14 +70,14 @@ def update_sci(filename):
 def find_hotpix(filename):
     """Find hotpixels and update DQ array
 
-    Pixels hotter that median + 5*sigma will be updated to have a
+    Pixels hotter than median + 5*sigma will be updated to have a
     DQ value of 16.
 
     .. note:: The input file will be updated in-place.
 
     Parameters
     ----------
-    
+
     filename: str
         filename of the input biasfile
 
@@ -84,7 +90,7 @@ def find_hotpix(filename):
 
         five_sigma = im_median + 5 * im_std
         index = np.where((hdu[('SCI', 1)].data > five_sigma) &
-                         (hdu[('SCI', 1)].data > im_mean + 0.1))
+                         (hdu[('SCI', 1)].data > im_mean + 0.1)) # Why? Perhaps a decision someone made when dinos roamed the Earth?
 
         hdu[('DQ', 1)].data[index] = 16
 
@@ -113,11 +119,11 @@ def make_basedark(input_list, refdark_name='basedark.fits', bias_file=None):
     print('with biasfile %s' % bias_file)
 
     #-- bias subtract data if not already done
-    flt_list = [functions.bias_subtract_data(item, bias_file) for item in input_list]
+    flt_list = [functions.bias_subtract_data(item, bias_file) for item in input_list] # bias subtracts all darks
 
     for filename in flt_list:
         texpstrt = fits.getval(filename, 'texpstrt', 0)
-        if texpstrt > 52091.0:
+        if texpstrt > 52091.0: # I guess after july 1, 2001 there should be a dark correction?
             functions.apply_dark_correction(filename, texpstrt)
 
     joined_filename = refdark_name.replace('.fits', '_joined.fits')
@@ -127,14 +133,14 @@ def make_basedark(input_list, refdark_name='basedark.fits', bias_file=None):
     #    raise IOError('No biasfile specified, this task needs one to run')
 
     print('Joining images')
-    functions.msjoin(flt_list, joined_filename)
+    functions.msjoin(flt_list, joined_filename) # combines all of the files in flt_list into one file with many extensions
 
     print('Performing CRREJECT')
-    crdone = functions.bd_crreject(joined_filename)
+    crdone = functions.bd_crreject(joined_filename) # checks for cr rejection
     if not crdone:
-        functions.bd_calstis(joined_filename, bias_file)
+        functions.bd_calstis(joined_filename, bias_file) #run calstis on the joined file (joined_filename)
 
-    functions.normalize_crj(crj_filename)
+    functions.normalize_crj(crj_filename) #normalize by exptime/gain
     shutil.copy(crj_filename, refdark_name)
 
     update_sci(refdark_name)
@@ -144,7 +150,7 @@ def make_basedark(input_list, refdark_name='basedark.fits', bias_file=None):
     fits.setval(refdark_name, 'TASKNAME', ext=0, value='BASEDARK')
 
     print('Cleaning...')
-    functions.RemoveIfThere(crj_filename)
+    functions.RemoveIfThere(crj_filename) #removes intermediate steps
     functions.RemoveIfThere(joined_filename)
     #map(functions.RemoveIfThere, flt_list)
 

@@ -36,27 +36,31 @@ def create_superdark(crj_filename, basedark):
                                                                sigma=5,
                                                                iters=40)
 
-        p_five_sigma = data_median + (5*data_std)
+        p_five_sigma = data_median + (5*data_std) # 5sigma above the median of the normalized superdark
         print('hot pixels are defined as above: ', p_five_sigma)
         basedark_hdu = fits.open(basedark)
 
         base_mean, base_median, base_std = sigma_clipped_stats(basedark_hdu[('sci', 1)].data,
                                                             sigma=5,
                                                             iters=40)
+                                                            # iterative stats on basedark
 
-        fivesig = base_median + 5.0 * base_std
-        zerodark = crj_hdu[('sci', 1)].data - base_median
+        fivesig = base_median + 5.0 * base_std # 5sigma above the median of the basedark
+        zerodark = crj_hdu[('sci', 1)].data - base_median # CR rejected data minus the median of the basedark
         only_hotpix = np.where(crj_hdu[('sci', 1)].data >= p_five_sigma,
                                zerodark,
-                               0.0)
+                               0.0) #replace hot pixels in CR rejected file with corresponding
+                                    #pixel values from zerodark and everything else with 0.
 
-        basedark_med = medfilt(basedark_hdu[('sci', 1)].data, (5, 5))
+        basedark_med = medfilt(basedark_hdu[('sci', 1)].data, (5, 5)) #median filter basedark
         only_dark = np.where(basedark_hdu[('sci', 1)].data >= p_five_sigma,
                              basedark_med,
-                             basedark_hdu[('sci', 1)].data)
+                             basedark_hdu[('sci', 1)].data) # replace all the hot pixels in the
+                                                            #basedark with corresponding values
+                                                            #from the median-filtered basedark
 
 
-        crj_hdu[('sci', 1)].data = only_dark + only_hotpix
+        crj_hdu[('sci', 1)].data = only_dark + only_hotpix #This is a bit problematic... AER 18 May 2017
 
         #- update DQ extension
         crj_hdu[('dq', 1)].data = np.where(only_hotpix >= p_five_sigma,
@@ -123,21 +127,21 @@ def make_weekdark(input_list, refdark_name, thebasedark, thebiasfile=None):
     print('Joining images to %s' % joined_out)
     functions.msjoin(flt_list, joined_out)
 
-    crdone = functions.bd_crreject(joined_out)
+    crdone = functions.bd_crreject(joined_out) # checks whether crrejection is done
     print("## crdone is ", crdone)
     if not crdone:
-        functions.bd_calstis(joined_out, thebiasfile)
+        functions.bd_calstis(joined_out, thebiasfile) #runs through calstis
 
     crj_filename = joined_out.replace('.fits', '_crj.fits')
     shutil.copy(crj_filename, refdark_name)
-    functions.normalize_crj(refdark_name)
+    functions.normalize_crj(refdark_name) # normalize by exptime/gain
 
     create_superdark(refdark_name, thebasedark)
 
     functions.update_header_from_input(refdark_name, input_list)
     fits.setval(refdark_name, 'TASKNAME', ext=0, value='WEEKDARK')
 
-    print('Cleaning up...')
+    print('Cleaning up...') # Remove intermediate files
     functions.RemoveIfThere(crj_filename)
     functions.RemoveIfThere(joined_out)
     #map(functions.RemoveIfThere, flt_list)

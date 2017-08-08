@@ -273,9 +273,9 @@ def make_resicols_image(residual_image, yfrac=1):
     ystart = 0
     yend = min(1024, int(np.floor(yfrac * residual_image.shape[0] + .5)))
 
-    residual_columns = np.mean(residual_image[ystart:yend], axis=0)
+    residual_columns = np.mean(residual_image[ystart:yend], axis=0) #finds the mean of all pixels in each column
     print(ystart, '-->', yend)
-    residual_columns_image = residual_columns * np.ones(residual_image.shape[1])[:, np.newaxis]
+    residual_columns_image = residual_columns * np.ones(residual_image.shape[1])[:, np.newaxis] #sets all pixels in each column equal to the mean of that column.
 
     return residual_columns_image
 
@@ -323,7 +323,7 @@ def normalize_crj(filename):
 
 #------------------------------------------------------------------------
 
-def msjoin(imset_list, out_name='joined_out.fits'):
+def msjoin(imset_list, out_name='joined_out.fits'): # I think this just puts all imset_list into one fits files (a bunch of extensions)
     """ Replicate msjoin functionality in pure python
 
     """
@@ -403,7 +403,6 @@ def crreject(input_file, workdir=None):
                     print()
                     with open(trailerfile) as tr:
                         for line in tr.readlines():
-                            print('HERE IS WHY THIS IS ABOUT TO CRASH:') # AER 9 Nov 2016
                             print('    {}'.format(line.strip()))
                 finally:
                     raise Exception('BASIC2D failed to properly reduce {}'.format(input_file))

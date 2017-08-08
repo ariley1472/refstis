@@ -103,6 +103,9 @@ def get_new_periods(products_directory, settings):
 
         response = collect_new(obs_to_get, settings)
         move_obs(obs_to_get, products_folder, settings['retrieve_directory'])
+        #print('products folder, ref begin, ref end')
+        #print(products_folder, ref_begin, ref_end) # AER 4 Aug 2017
+        #raise KeyboardInterrupt('STAHP')
         separate_obs(products_folder, ref_begin, ref_end)
 
     return dirs_to_process
@@ -322,13 +325,13 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
     basebias_name = last_basebias or basebias_name
 
     bias_folders = [item for item in week_folders if '/biases/' in item]
-    print(bias_folders)
+    #print(bias_folders)
 
     for folder in sorted(bias_folders):
         print('Processing {}'.format(folder))
 
         proposal, wk, visit = pull_info(folder)
-        print 'folder:', folder
+        #print 'folder:', folder
 
         raw_files = glob.glob(os.path.join(folder, '*raw.fits'))
         n_imsets = functions.count_imsets(raw_files)
@@ -368,7 +371,7 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
     print('#######################')
     all_flt_darks = []
     dark_folders = [item for item in week_folders if '/darks/' in item]
-    print(dark_folders)
+    #print(dark_folders)
     for folder in sorted(dark_folders):
         print('Prepping {}'.format(folder))
 
@@ -380,10 +383,10 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
                                      'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk))
 
         raw_files = glob.glob(os.path.join(folder, '*raw.fits'))
-        print('**********RAWFILES*********') # AER 21 Nov 2016
-        print(raw_files) # AER 21 Nov 2016
-        print('***************************') # AER 21 Nov 2016
-        #raise
+        #print('**********RAWFILES*********') # AER 21 Nov 2016
+        #print(raw_files) # AER 21 Nov 2016
+        #print('***************************') # AER 21 Nov 2016
+
         for item in raw_files:
             print("bias subtracting")
             flt_name = functions.bias_subtract_data(item, weekbias_name)
@@ -394,8 +397,8 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
         print('Processing {}'.format(folder))
         raw_files = glob.glob(os.path.join(folder, '*flt.fits'))
         n_imsets = functions.count_imsets(raw_files)
-        
-        gain = functions.get_keyword(raw_files, 'CCDGAIN', 0)
+
+        gain = functions.get_keyword(raw_files, 'CCDGAIN', 0) #asserts that all KEYWORD values in the list of files be the same
         xbin = functions.get_keyword(raw_files, 'BINAXIS1', 0)
         ybin = functions.get_keyword(raw_files, 'BINAXIS2', 0)
 
@@ -407,18 +410,18 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
             continue
 
 
-        #-- create a base-dark for everyweek
+        #-- create a base-dark for every week
         weekbias_name = os.path.join(root_folder,
                                      'biases/1-1x1',
                                      wk,
-                                     'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk))
+                                     'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk)) #weekbias has already been created
         basedark_name = os.path.join(folder, 'basedark_%s_%s_%s.fits'%(proposal, visit, wk))
 
         if not os.path.exists(basedark_name):
             basedark.make_basedark(all_flt_darks, basedark_name, weekbias_name)
 
         basedark_name = last_basedark or basedark_name
-        print 'BLAH HERE' # AER 21 Nov 2016
+        #print 'BLAH HERE' # AER 21 Nov 2016
         weekdark.make_weekdark(raw_files,
                                weekdark_name,
                                basedark_name,
@@ -488,7 +491,7 @@ def get_new_obs(file_type, start, end, settings):
     if file_type == 'DARK':
         proposal_list = settings['dark_proposals']
         MIN_EXPTIME = 1000
-        MAX_EXPTIME = 1200
+        MAX_EXPTIME = 1400
     elif file_type == 'BIAS':
         proposal_list = settings['bias_proposals']
         MIN_EXPTIME = -1
@@ -586,12 +589,15 @@ def separate_period(base_dir):
 
     print('Separating', base_dir)
     all_files = glob.glob(os.path.join(base_dir, 'o*_raw.fits'))
+    #for f in all_files:
+        #print f, fits.getval(f, 'EXPSTART', ext = 1)
+    #raise KeyboardInterrupt('Hey, stahp')
     if not len(all_files):
         print("nothing to move")
         return
 
-    mjd_times = np.array([fits.getval(item, 'EXPSTART', ext=1)
-                          for item in all_files])
+    mjd_times = np.array([fits.getval(item, 'EXPSTART', ext=1) for item in all_files])
+
     month_begin = mjd_times.min()
     month_end = mjd_times.max()
     print('All data goes from', month_begin, ' to ',  month_end)
@@ -659,7 +665,7 @@ def separate_period(base_dir):
             else:
                 print('File Type not recognized')
 
-            print(output_path)
+            #print(output_path)
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
 
@@ -750,7 +756,7 @@ def separate_obs(base_dir, month_begin, month_end):
             else:
                 print('File Type not recognized')
 
-            print(output_path)
+            #print(output_path)
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
 
@@ -784,6 +790,9 @@ def move_obs(new_obs, base_output_dir, retrieve_directory):
         os.makedirs(base_output_dir)
 
     list_to_move = [os.path.join(retrieve_directory, item.lower()+'_raw.fits') for item in new_obs]
+    #print('list to move:') #AER 4 Aug 2017
+    #print(list_to_move)
+    #raise KeyboardInterrupt('I SAID STAHP')
 
     for item in list_to_move:
         print('Moving ', item,  ' to:', base_output_dir)
@@ -869,7 +878,7 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
 
     args = parse_args()
 
-    print(args)
+    #print(args)
 
     #-- start pipeline configuration
     print(os.path.abspath(config_file))
@@ -894,12 +903,11 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
 
     all_folders = get_new_periods(data['products_directory'], data)
 
-
     if args.redo_all: # AER 11 Aug 2016: in an attempt to use the commandline args.
         print("----------------------------------")
         print("Processing all past anneal months")
         print("----------------------------------")
-        print 'all_folders:', all_folders
+        #print 'all_folders:', all_folders
         for folder in all_folders:
             make_pipeline_reffiles(folder)
             tail = folder.rstrip(os.sep).split(os.sep)[-1]
@@ -910,9 +918,10 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
     if not args.redo_all and not args.reprocess_month:
         print("-----------------------------------")
         print("Processing most recent anneal month")
+        print('Processing {}'.format(all_folders[0]))
         print("-----------------------------------")
-        make_pipeline_reffiles(all_folders[0])
-        tail = all_folders[0].rstrip(os.sep).split(os.sep)[-1]
+        make_pipeline_reffiles(all_folders[0]) # most recent month
+        tail = all_folders[0].rstrip(os.sep).split(os.sep)[-1] #name of the directory (prop#_visit--> 14822_0Q)
         destination = os.path.join(data['delivery_directory'], tail)
         check_all(all_folders[0], destination)
 
@@ -927,7 +936,6 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
         print 'products_directory:', products_directory
         for all_anneals in glob.glob(''.join([products_directory, '?????_??/darks/'])):
             for root, directories, files_all in os.walk(all_anneals):
-                #print directories
                 if not directories:
                     fltfiles = glob.glob(''.join([root, '/*_flt.fits']))
                     if len(fltfiles) != 0:
@@ -935,7 +943,7 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
                         obsdate = fits.getval(onefile, 'TDATEOBS', ext = 0)
                         if (obsdate <= args.reprocess_month[1] and obsdate >= args.reprocess_month[0]):
                             filestoprocess.append(root)
-        print 'filestoprocess:', filestoprocess
+
         folders1 = []
         for f in filestoprocess:
             print '/'.join(f.split('/')[:7])

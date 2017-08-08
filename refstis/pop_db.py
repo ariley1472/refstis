@@ -96,7 +96,7 @@ def grab_anneal_mjds():
             continue
 
         proposid = pyfits.getval( anneal_obs[0], 'PROPOSID', ext=0 )
-        print 'proposid:', proposid
+        #print 'proposid:', proposid
         anneal_start = pyfits.getval(anneal_obs[0], 'TEXPSTRT', ext=0)
         anneal_end = pyfits.getval(anneal_obs[1], 'TEXPSTRT', ext=0)
 

@@ -50,18 +50,18 @@ def make_weekbias(input_list, refbias_name, basebias):
     print('using {}'.format(basebias))
 
     joined_out = refbias_name.replace('.fits', '_joined.fits')
-    functions.msjoin(input_list, joined_out)
+    functions.msjoin(input_list, joined_out) # Joins all files into one fits with many extensions
 
-    crj_filename = functions.crreject(joined_out)
-    residual_image, median_image = functions.make_residual(crj_filename, (3, 15))
+    crj_filename = functions.crreject(joined_out) # CR rejection
+    residual_image, median_image = functions.make_residual(crj_filename, (3, 15)) # Median filter with a 15x3 box and subtract from mean to make residual
 
-    resi_columns_2d = functions.make_resicols_image(residual_image, yfrac=.25)
+    resi_columns_2d = functions.make_resicols_image(residual_image, yfrac=.25) # makes image where each column is filled with the mean of the pixels in that column in the original image.
 
     resi_mean, resi_median, resi_std = sigma_clipped_stats(resi_columns_2d[0],
                                                            sigma=3,
-                                                           iters=20)
-    replval = resi_mean + 5.0 * resi_std
-    only_hotcols = np.where(resi_columns_2d >= replval, residual_image, 0)
+                                                           iters=20) # find the stats of the column values
+    replval = resi_mean + 5.0 * resi_std #5sigma above the mean
+    only_hotcols = np.where(resi_columns_2d >= replval, residual_image, 0) #Finds where residual column image is less than 5 sigma above the mean and replaces everything else with 0. 
 
     with fits.open(crj_filename, mode='update') as hdu:
         #-- update science extension
