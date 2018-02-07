@@ -79,7 +79,7 @@ executing the pipeline command from the terminal will kick everything off:
   $ refstis_pipeline
 
 This will perform all the necessary pipeline steps to create the full suite
-of superdarks and superbiases, includng;
+of superdarks and superbiases for the most recent anneal period, includng;
 
 1. Checking for all the STIS anneal datasets and determining anneal months.
 2. Retrieving new raw dark and bias observations for each month.
@@ -87,9 +87,33 @@ of superdarks and superbiases, includng;
 4. Prepping the reference files for delivery into CRDS.
 5. Running the data against a test-suite and verifing no errors are produced.
 
-After all steps have been completed for a given anneal month, the pipeline will
+After all steps have been completed for the anneal month, the pipeline will
 send you an email with the delivery form.  This should be forwarded to
 redcat@stsci.edu once any final checks on the data are perfomed.
+
+Other command line options
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The default option when running the refstis pipeline is to run the pipeline on only
+the most recent anneal month. However, there are other command line options as well.
+
+To run all of the anneal months for STIS, use the -a or --all option:
+
+.. code-block:: bash
+
+  $ refstis_pipeline -a
+
+This will run the reference file creation on all of the anneal months in the history
+of STIS.
+
+To create the reference files for a specific time period, use the -m or --month option:
+
+.. code-block:: bash
+
+  $ refstis_pipeline -m '2009-06-02' '2009-12-09'
+
+This will run the reference file creation on all of the anneal months that fall between
+02 June 2009 and 09 December 2009. 
 
 The configure file
 ~~~~~~~~~~~~~~~~~~

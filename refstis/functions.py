@@ -105,7 +105,9 @@ def update_header_from_input(filename, input_list):
     else:
         raise ValueError( 'Frequency %s not understood' % str(frequency))
 
+    print('inputlist:', input_list)
     nimsets = count_imsets(input_list)
+
 
     proposals = list(set([pyfits.getval(item, 'PROPOSID') for item in input_list]))
     prop_titles = list(set([pyfits.getval(item, 'PROPTTL1') for item in input_list]))
@@ -490,13 +492,22 @@ def count_imsets(file_list):
         number of imsets
 
     """
+    print('Files in "count_imsets:"', file_list) # AER 17 Oct 2017
+    #raise KeyboardInterrupt # AER 17 Oct 2017
 
     if not isinstance(file_list, list):
         file_list = [file_list]
+    print file_list
+
+    #raise KeyboardInterrupt
 
     total = 0
     for item in file_list:
+        print('item:', item)
         total += pyfits.getval(item,'NEXTEND',ext=0) / 3
+    
+    print 'total:', total
+    #raise KeyboardInterrupt
 
     return total
 
@@ -509,6 +520,7 @@ def get_keyword(file_list,keyword,ext=0):
     will be raised
 
     """
+    #print('file_list:', file_list) # 28 Nov 2017
 
     kw_set = set([pyfits.getval(item,keyword,ext=ext) for item in file_list])
     print 'kw_set:', kw_set
@@ -682,7 +694,7 @@ def figure_number_of_periods(number_of_days, mode) :
                 break
     else:
         sys.exit('what mode did you put in?')
-    raise Exception('This is after we figured out number of days and periods...')
+    #raise Exception('This is after we figured out number of days and periods...')
     # return value
     #print "return number_of_periods =",  number_of_periods
     return number_of_periods

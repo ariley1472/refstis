@@ -149,3 +149,37 @@ def make_weekdark(input_list, refdark_name, thebasedark, thebiasfile=None):
     print('Weekdark done for {}'.format(refdark_name))
 
 #-------------------------------------------------------------------------------
+
+def weekdark():
+    import argparse
+    
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('files',
+                        nargs='*',
+                        help='input files to turn into reference file')
+
+    parser.add_argument('-o',
+                        dest='outname',
+                        type=str,
+                        default='basebias.fits',
+                        help='output name for the reference file')
+
+    parser.add_argument('-b',
+                        dest='biasname',
+                        type=str,
+                        default=None,
+                        help='Bias file for calibration.')
+
+    parser.add_argument('-d',
+                        dest='darkname',
+                        type=str,
+                        default='',
+                        help='base dark file for calibration.')
+                        
+    args = parser.parse_args()
+    
+    make_weekdark(args.files,
+                  args.outname,
+                  args.darkname,
+                  thebiasfile=args.biasname)

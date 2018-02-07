@@ -99,6 +99,24 @@ def make_refbias(input_list, refbias_name='refbias.fits'):
     functions.RemoveIfThere(joined_out)
 
     print('refbias done for {}'.format(refbias_name))
-    raise
+    #raise
 
 #-------------------------------------------------------------------------------
+
+def refbias():
+    import argparse
+    
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('files',
+                        nargs='*',
+                        help='input files to turn into reference file')
+
+    parser.add_argument('-o',
+                        dest='outname',
+                        type=str,
+                        default='refbias.fits',
+                        help='output name for the reference file')
+
+    args = parse_args()
+    make_refbias(args.files, args.outname)

@@ -303,3 +303,26 @@ def make_basebias(input_list, refbias_name='basebias.fits'):
     print('basejoint done for {}'.format(refbias_name))
 
 #-------------------------------------------------------------------------------
+
+def basejoint():
+    '''
+    
+    '''
+    import argparse
+    
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('files',
+                        nargs='*',
+                        help='input files to turn into reference file')
+
+    parser.add_argument('-o',
+                        dest='outname',
+                        type=str,
+                        default='basebias.fits',
+                        help='output name for the reference file')
+
+    args = parser.parse_args()
+    
+    make_basebias(args.files, args.outname)
+
