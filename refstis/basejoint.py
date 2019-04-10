@@ -269,8 +269,8 @@ def make_basebias(input_list, refbias_name='basebias.fits'):
     print('#-------------------------------#')
     print('Output to %s' % refbias_name)
 
-    for f in input_list: #AER 29 Mar 2017
-        print f, fits.getval(f, 'TDATEOBS'), fits.getval(f, 'BINAXIS1'), fits.getval(f, 'BINAXIS2')
+    #for f in input_list: #AER 29 Mar 2017
+    #    print f, fits.getval(f, 'TDATEOBS'), fits.getval(f, 'BINAXIS1'), fits.getval(f, 'BINAXIS2')
 
 
     print('Processing individual files')
@@ -306,10 +306,10 @@ def make_basebias(input_list, refbias_name='basebias.fits'):
 
 def basejoint():
     '''
-    
+
     '''
     import argparse
-    
+
     parser = argparse.ArgumentParser()
 
     parser.add_argument('files',
@@ -323,6 +323,5 @@ def basejoint():
                         help='output name for the reference file')
 
     args = parser.parse_args()
-    
-    make_basebias(args.files, args.outname)
 
+    make_basebias(args.files, args.outname)

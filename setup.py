@@ -18,9 +18,17 @@ setup(
                    'Topic :: Scientific/Engineering :: Astronomy',
                    'Topic :: Scientific/Engineering :: Physics',
                    'Topic :: Software Development :: Libraries :: Python Modules'],
-    scripts = glob.glob('scripts/*'),
+    #scripts = glob.glob('scripts/*'),
     install_requires = ['pyyaml',
                         'numpy>=1.10',
                         'astropy>=1.0.1',
                         'stistools>=1.0.2'],
+    entry_points={
+        'console_scripts': [\
+            'basejoint = refstis.basejoint:basejoint', 
+            'basedark = refstis.basedark:basedark',
+            'pipeline = refstis.pipeline:pipeline',
+            'refbias = refstis.refbias:refbias',
+            'weekbias = refstis.weekbias:weekbias',
+            'weekdark = refstis.weekdark:weekdark']},
     )

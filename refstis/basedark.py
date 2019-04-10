@@ -89,7 +89,7 @@ def find_hotpix(filename):
 
         five_sigma = im_median + 5 * im_std
         index = np.where((hdu[('SCI', 1)].data > five_sigma) &
-                         (hdu[('SCI', 1)].data > im_mean + 0.1)) # Why? Perhaps a decision someone made when dinos roamed the Earth?
+                         (hdu[('SCI', 1)].data > im_mean + 0.1)) 
 
         hdu[('DQ', 1)].data[index] = 16
 
@@ -159,9 +159,9 @@ def make_basedark(input_list, refdark_name='basedark.fits', bias_file=None):
 
 def basedark():
     import argparse
-    
+
     parser = argparse.ArgumentParser()
-    
+
     parser.add_argument('files',
                         nargs='*',
                         help='input files to turn into reference file')
