@@ -103,9 +103,6 @@ def get_new_periods(products_directory, settings):
 
         response = collect_new(obs_to_get, settings)
         move_obs(obs_to_get, products_folder, settings['retrieve_directory'])
-        print('products folder, ref begin, ref end')
-        print(products_folder, ref_begin, ref_end) # AER 4 Aug 2017
-        #raise KeyboardInterrupt('STAHP')
         separate_obs(products_folder, ref_begin, ref_end)
 
     return dirs_to_process
@@ -253,8 +250,6 @@ def get_anneal_month(proposal_id, anneal_id):
         raise ValueError("Too many values returned: {}".format(all_info))
     pri_key, anneal_end = all_info[0]
 
-
-
     c.execute("""SELECT end FROM {} WHERE id={}""".format(table, pri_key - 1))
 
     all_info = [row for row in c]
@@ -294,8 +289,6 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
         raise IOError('Root folder does not exist')
 
     # separate raw files in folder into periods
-    print('Separating Periods of {}'.format(root_folder)) #AER 4 Oct 2017
-    print('root folder:', root_folder) # AER 19 October 2017
     separate_period(root_folder)
 
     print('###################')
@@ -321,26 +314,13 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
                 raw_files.append(f)
             else:
                 remove_files.append(f)
-                #print('IN REMOVED_FILES:', f)
 
-        #AER 25 Oct 2016: Just as a check. Can probably just comment this out
-        print '-------RAW FILES-------'
-        print raw_files
-        print '---------END-----------'
-        for filename in raw_files:
-            print(filename, fits.getval(filename, 'BINAXIS1'), fits.getval(filename, 'BINAXIS2'), fits.getval(filename, 'CCDGAIN'))
-
-
-        #raise Exception('is the filter even working?!') # AER 28 Mar 2017: an honest question.
-
-    raw_files = np.unique(raw_files) # AER 30 Mar 2017: Hopefully this works?
+    raw_files = np.unique(raw_files) # AER 30 Mar 2017
     basebias_name = os.path.join(root_folder, 'basebias.fits')
     if os.path.exists(basebias_name):
         print('{} already exists, skipping'.format(basebias_name))
     else:
         basejoint.make_basebias(raw_files, basebias_name)
-        #print('************RAWFILES*************') # AER 21 Nov 2016
-        #print('raw_files:', raw_files) #AER 18 Oct 2016
 
     print('#######################')
     print(' make the weekly biases')
@@ -358,28 +338,17 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
         print('Processing {}'.format(folder))
 
         proposal, wk, visit = pull_info(folder)
-        #print 'folder:', folder
 
         raw_files = glob.glob(os.path.join(folder, '*raw.fits'))
-        #print 'folder:', folder #AER 28 Nov 2017
-        #print 'raw_files:', raw_files #AER 28 Nov 2017
-        #raise KeyboardInterrupt # AER 28 Nov 2017
         n_imsets = functions.count_imsets(raw_files)
 
-        #print('*********RAW FILES********') # AER 27 Mar 2017
-        #for f in raw_files: # AER 27 Mar 2017
-            #print f, fits.getval(f, 'CCDGAIN') # AER 27 Mar 2017
-        #raise KeyboardInterrupt # AER 28 Nov 2017
-
         gain = functions.get_keyword(raw_files, 'CCDGAIN', 0)
-        xbin = functions.get_keyword(raw_files, 'BINAXIS1', 0) # = 1 if my for loop above worked AER 25 Oct 2016
-        ybin = functions.get_keyword(raw_files, 'BINAXIS2', 0) # = 1 if my for loop above worked AER 25 Oct 2016
+        xbin = functions.get_keyword(raw_files, 'BINAXIS1', 0)
+        ybin = functions.get_keyword(raw_files, 'BINAXIS2', 0)
 
         weekbias_name = os.path.join(folder,
                                      'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk))
-        #print '*************************************' # AER 21 Nov 2016
-        #print weekbias_name # AER 21 Nov 2016
-        #print '*************************************' # AER 21 Nov 2016
+
         if os.path.exists(weekbias_name):
             print('{} already exists, skipping')
             continue
@@ -409,7 +378,7 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
     print('#######################')
     all_flt_darks = []
     dark_folders = [item for item in week_folders if '/darks/' in item]
-    #print(dark_folders)
+
     for folder in sorted(dark_folders):
         print('Prepping {}'.format(folder))
 
@@ -421,9 +390,6 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
                                      'weekbias_%s_%s_%s_bia.fits'%(proposal, visit, wk))
 
         raw_files = glob.glob(os.path.join(folder, '*raw.fits'))
-        #print('**********RAWFILES*********') # AER 21 Nov 2016
-        #print(raw_files) # AER 21 Nov 2016
-        #print('***************************') # AER 21 Nov 2016
 
         for item in raw_files:
             print("bias subtracting")
@@ -459,7 +425,6 @@ def make_pipeline_reffiles(root_folder, last_basedark=None, last_basebias=None):
             basedark.make_basedark(all_flt_darks, basedark_name, weekbias_name)
 
         basedark_name = last_basedark or basedark_name
-        #print 'BLAH HERE' # AER 21 Nov 2016
         weekdark.make_weekdark(raw_files,
                                weekdark_name,
                                basedark_name,
@@ -626,18 +591,12 @@ def separate_period(base_dir):
 
 
     print('Separating', base_dir)
-    #print base_dir
+
     all_files = glob.glob(os.path.join(base_dir, 'o*_raw.fits'))
-    print('all_files:', all_files) #AER 04 Oct 2017
-    #raise KeyboardInterrupt #AER 04 Oct 2017
-    for f in all_files:
-        print f, fits.getval(f, 'EXPSTART', ext = 1)
-    #raise KeyboardInterrupt('Hey, stahp') # AER 04 October 2017
+
     if not len(all_files):
         print("nothing to move")
         return
-    for f in all_files: #AER 18 Oct 2016
-        print f, fits.getval(f, 'EXPSTART', ext = 1) #AER 18 Oct 2016
 
     mjd_times = np.array([fits.getval(item, 'EXPSTART', ext=1) for item in all_files])
 
@@ -708,7 +667,6 @@ def separate_period(base_dir):
             else:
                 print('File Type not recognized')
 
-            #print(output_path)
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
 
@@ -799,7 +757,6 @@ def separate_obs(base_dir, month_begin, month_end):
             else:
                 print('File Type not recognized')
 
-            #print(output_path)
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
 
@@ -811,11 +768,6 @@ def separate_obs(base_dir, month_begin, month_end):
             obs_to_move = [item for item in obs_to_move1 if
                             ((fits.getval(item, 'BINAXIS1') == 1) and
                             (fits.getval(item, 'BINAXIS2') == 1))]
-
-            for i in obs_to_move:
-                print i, fits.getval(i, 'BINAXIS1'), fits.getval(i, 'BINAXIS2')
-            #raise
-
 
             if not len(obs_to_move):
                 print('error, empty list to move')
@@ -842,9 +794,6 @@ def move_obs(new_obs, base_output_dir, retrieve_directory):
         os.makedirs(base_output_dir)
 
     list_to_move = [os.path.join(retrieve_directory, item.lower()+'_raw.fits') for item in new_obs]
-    #print('list to move:') #AER 4 Aug 2017
-    #print(list_to_move)
-    #raise KeyboardInterrupt('I SAID STAHP')
 
     for item in list_to_move:
         print('Moving ', item,  ' to:', base_output_dir)
@@ -930,8 +879,6 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
 
     args = parse_args()
 
-    #print(args)
-
     #-- start pipeline configuration
     print(os.path.abspath(config_file))
     if not os.path.exists(config_file):
@@ -986,10 +933,8 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
         print('products_directory:  {}'.format(products_directory))
         for all_anneals in glob.glob(''.join([products_directory, '?????_??/darks/'])):
             for root, directories, files_all in os.walk(all_anneals):
-                #print('directories', directories)
                 if not directories:
                     fltfiles = glob.glob(''.join([root, '/*_raw.fits'])) #AER 18 oct 2016: Changed flt to raw files
-                    print("len raw files:", len(fltfiles)) #AER 12 Oct 2016
                     try:
                         onefile = np.sort(fltfiles)[0]
                     except: # AER 18 oct 2016: I believe this would throw an exception only if the length of the list is none.
@@ -998,21 +943,14 @@ def run(config_file='config_refstis.yaml'): #AER 3 Nov 2016: Changed from config
                         print('*********************************')
                         continue
                     obsdate = fits.getval(onefile, 'TDATEOBS', ext = 0)
-                    #print('obsdate:', obsdate) #AER 12 Oct 2016
                     if (obsdate <= args.reprocess_month[1] and obsdate >= args.reprocess_month[0]):
                         print('root, files:', root, files_all)
                         filestoprocess.append(root)#files_all[:])
 
-        print 'filestoprocess:', filestoprocess
         folders1 = []
         for f in filestoprocess:
-            print('blah') # AER 04 October 2017
-            print('/'.join(f.split('/')[:7]))
             folders1.append('/'.join(f.split('/')[:7]))
         all_folders = set(folders1)
-        print('all_folders:', all_folders) # AER 04 October 2017
-        #print('shape(all_folders):', np.shape(all_folders))
-        #raise Exception('Some sort of error')
 
         for folder in all_folders:
             print 'Folder:', folder # AER 27 Mar 2017

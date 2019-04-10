@@ -96,11 +96,10 @@ def grab_anneal_mjds():
             continue
 
         proposid = pyfits.getval( anneal_obs[0], 'PROPOSID', ext=0 )
-        #print 'proposid:', proposid
         anneal_start = pyfits.getval(anneal_obs[0], 'TEXPSTRT', ext=0)
         anneal_end = pyfits.getval(anneal_obs[1], 'TEXPSTRT', ext=0)
 
-        # AER 25 Jan 2017: Added the following. Hopefully it works!
+        # AER 25 Jan 2017: Added the following.
         if proposid < 14822:
             visit_number = '{:02.0f}'.format(int(pyfits.getval(anneal_obs[1], 'OBSET_ID')) - 1)
         else:

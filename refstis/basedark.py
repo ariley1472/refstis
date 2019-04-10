@@ -89,7 +89,7 @@ def find_hotpix(filename):
 
         five_sigma = im_median + 5 * im_std
         index = np.where((hdu[('SCI', 1)].data > five_sigma) &
-                         (hdu[('SCI', 1)].data > im_mean + 0.1)) 
+                         (hdu[('SCI', 1)].data > im_mean + 0.1))
 
         hdu[('DQ', 1)].data[index] = 16
 

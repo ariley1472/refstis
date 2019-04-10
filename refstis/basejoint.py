@@ -145,7 +145,6 @@ def calibrate(input_file):
             hdu[0].header['APER_FOV'] = '50x50'
 
             if (blevcorr != 'COMPLETE'):
-                #print('Performing BLEVCORR')
                 hdu[0].header['BLEVCORR'] = 'PERFORM'
                 stistools.basic2d.basic2d(input=input_file,
                                           output=output_blev,
@@ -166,10 +165,8 @@ def calibrate(input_file):
                                           verbose=False,
                                           trailer="/dev/null")
             else:
-                #print('Blevcorr alread Performed')
                 shutil.copy(input_file, output_blev)
 
-            #print('Performing OCRREJECT')
             stistools.ocrreject.ocrreject(input=output_blev,
                                           output=output_crj,
                                           verbose=False,
@@ -269,15 +266,10 @@ def make_basebias(input_list, refbias_name='basebias.fits'):
     print('#-------------------------------#')
     print('Output to %s' % refbias_name)
 
-    #for f in input_list: #AER 29 Mar 2017
-    #    print f, fits.getval(f, 'TDATEOBS'), fits.getval(f, 'BINAXIS1'), fits.getval(f, 'BINAXIS2')
-
-
     print('Processing individual files')
     crj_list = [calibrate(item) for item in input_list]
     crj_list = [item for item in crj_list if item != None]
 
-    #print('crj list', crj_list) # AER 19 Oct 2016
     mean_bias, totalweight = average_biases(crj_list)
 
     print('Replacing hot columns and pixels by median-smoothed values')
