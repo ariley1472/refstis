@@ -1,4 +1,4 @@
-from astropy.io import fits as pyfits
+from astropy.io import fits
 from astropy.stats import sigma_clipped_stats
 import numpy as np
 import os
@@ -108,8 +108,8 @@ def update_header_from_input(filename, input_list):
     nimsets = count_imsets(input_list)
 
 
-    proposals = list(set([pyfits.getval(item, 'PROPOSID') for item in input_list]))
-    prop_titles = list(set([pyfits.getval(item, 'PROPTTL1') for item in input_list]))
+    proposals = list(set(fits.getval(item, 'PROPOSID') for item in input_list]))
+    prop_titles = list(set([fits.getval(item, 'PROPTTL1') for item in input_list]))
 
     data_start_pedigree, data_end_pedigree, data_start_mjd, data_end_mjd = get_start_and_endtimes(input_list)
     #anneal_weeks = divide_anneal_month(data_start_mjd, data_end_mjd, '/grp/hst/stis/calibration/anneals/', N_period)
@@ -122,7 +122,7 @@ def update_header_from_input(filename, input_list):
     month, day, time, year = Time(data_start_mjd, format='mjd').datetime.ctime().split()[1:]
     useafter = '{:s} {:02d} {:s} {:s}'.format(month, int(day), year, time)
 
-    hdu_out = pyfits.HDUList(pyfits.PrimaryHDU())
+    hdu_out = fits.HDUList(fits.PrimaryHDU())
     hdu_out[0].header['FILENAME'] = os.path.split(filename)[1]
     hdu_out[0].header['NEXTEND'] = 3
     hdu_out[0].header['TELESCOP'] = 'HST'
@@ -229,20 +229,20 @@ def update_header_from_input(filename, input_list):
         hdu_out[0].header.add_history('a median-filtered (kernel = 5x5 pixels) version of')
         hdu_out[0].header.add_history('the baseline dark.')
 
-    with pyfits.open(filename) as ref:
-        hdu_out.append(pyfits.ImageHDU(data=ref[1].data))
+    with fits.open(filename) as ref:
+        hdu_out.append(fits.ImageHDU(data=ref[1].data))
         hdu_out[1].header['EXTNAME'] = 'SCI'
         hdu_out[1].header['EXTVER'] = 1
         hdu_out[1].header['PCOUNT'] = 0
         hdu_out[1].header['GROUNT'] = 1
 
-        hdu_out.append(pyfits.ImageHDU(data=ref[2].data))
+        hdu_out.append(fits.ImageHDU(data=ref[2].data))
         hdu_out[2].header['EXTNAME'] = 'ERR'
         hdu_out[2].header['EXTVER'] = 1
         hdu_out[2].header['PCOUNT'] = 0
         hdu_out[2].header['GROUNT'] = 1
 
-        hdu_out.append(pyfits.ImageHDU(data=ref[3].data))
+        hdu_out.append(fits.ImageHDU(data=ref[3].data))
         hdu_out[3].header['EXTNAME'] = 'DQ'
         hdu_out[3].header['EXTVER'] = 1
         hdu_out[3].header['PCOUNT'] = 0
@@ -255,8 +255,8 @@ def update_header_from_input(filename, input_list):
 def get_start_and_endtimes(input_list):
     times = []
     for ifile in input_list:
-        times.append(pyfits.getval(ifile, 'texpstrt', 0))
-        times.append(pyfits.getval(ifile, 'texpend', 0))
+        times.append(fits.getval(ifile, 'texpstrt', 0))
+        times.append(fits.getval(ifile, 'texpend', 0))
     times.sort()
     start_mjd = times[0]
     end_mjd = times[-1]
@@ -294,7 +294,7 @@ def make_residual(mean_bias, kern=(3, 15)):
 
 
     """
-    mean_hdu = pyfits.open(mean_bias)
+    mean_hdu = fits.open(mean_bias)
     mean_image = mean_hdu[('sci', 1)].data
 
     median_image = median_filter(mean_image, kern)
@@ -315,7 +315,7 @@ def normalize_crj(filename):
 
     """
 
-    with pyfits.open(filename, mode='update') as hdu:
+    with fits.open(filename, mode='update') as hdu:
         exptime = hdu[0].header['TEXPTIME']
         gain = hdu[0].header['ATODGAIN']
 
@@ -333,12 +333,12 @@ def msjoin(imset_list, out_name='joined_out.fits'): # I think this just puts all
 
     """
 
-    hdu = pyfits.open( imset_list[0] )
+    hdu = fits.open( imset_list[0] )
 
     ext_count = 0
     n_offset = (len( hdu[1:] ) // 3) + 1
     for dataset in imset_list[1:]:
-        add_hdu = pyfits.open( dataset )
+        add_hdu = fits.open( dataset )
         for extension in add_hdu[1:]:
             extension.header['EXTVER'] = (ext_count // 3) + n_offset
             hdu.append( extension )
@@ -364,7 +364,7 @@ def crreject(input_file, workdir=None):
 
     output_crj = input_file.replace('.fits','_crj.fits')
 
-    with pyfits.open(input_file) as hdu:
+    with fits.open(input_file) as hdu:
         nimset = hdu[0].header['nextend'] / 3
         nrptexp = hdu[0].header['nrptexp']
         crcorr = hdu[0].header['crcorr']
@@ -378,16 +378,15 @@ def crreject(input_file, workdir=None):
 
     if (crcorr != "COMPLETE"):
         if (nrptexp != nimset):
-            pyfits.setval(input_file,'NRPTEXP',value=nimset)
-            pyfits.setval(input_file,'CRSPLIT',value=1)
+            fits.setval(input_file,'NRPTEXP',value=nimset)
+            fits.setval(input_file,'CRSPLIT',value=1)
 
-        pyfits.setval(input_file, 'CRCORR', value='PERFORM')
-        #pyfits.setval(input_file, 'DQICORR', value='PERFORM')
-        pyfits.setval(input_file, 'APERTURE', value='50CCD')
-        pyfits.setval(input_file, 'APER_FOV', value='50x50')
+        fits.setval(input_file, 'CRCORR', value='PERFORM')
+        fits.setval(input_file, 'APERTURE', value='50CCD')
+        fits.setval(input_file, 'APER_FOV', value='50x50')
         if (blevcorr != 'COMPLETE') :
             print('Performing BLEVCORR')
-            pyfits.setval(input_file, 'BLEVCORR', value='PERFORM')
+            fits.setval(input_file, 'BLEVCORR', value='PERFORM')
 
             status = basic2d(input_file,
                              output_blev,
@@ -441,9 +440,9 @@ def crreject(input_file, workdir=None):
         print("CR rejection already done")
         os.rename(input_file, output_crj)
 
-    pyfits.setval(output_crj, 'FILENAME', value=output_crj)
+    fits.setval(output_crj, 'FILENAME', value=output_crj)
 
-    with pyfits.open(output_crj) as hdu:
+    with fits.open(output_crj) as hdu:
         gain = hdu[0].header['atodgain']
         ccdgain = hdu[0].header['ccdgain']
         xsize = hdu[1].header['naxis1']
@@ -462,7 +461,7 @@ def crreject(input_file, workdir=None):
 
     ###this used to be a call to MSARITH, is anything else needed?
     ###modifying the error too (done), etc?
-    hdu = pyfits.open(output_crj)
+    hdu = fits.open(output_crj)
     hdu[('sci', 1)].data /= ncombine
     hdu[('err', 1)].data /= ncombine
     hdu.writeto(out_div, output_verify='exception', clobber=True)
@@ -498,7 +497,7 @@ def count_imsets(file_list):
     total = 0
     for item in file_list:
         print('item:', item)
-        total += pyfits.getval(item,'NEXTEND',ext=0) / 3
+        total += fits.getval(item,'NEXTEND',ext=0) / 3
 
     return total
 
@@ -512,7 +511,7 @@ def get_keyword(file_list,keyword,ext=0):
 
     """
 
-    kw_set = set([pyfits.getval(item,keyword,ext=ext) for item in file_list])
+    kw_set = set([fits.getval(item,keyword,ext=ext) for item in file_list])
     assert len(kw_set) == 1,' multiple values found for kw: % s'% (keyword)
 
     return list(kw_set)[0]
@@ -792,7 +791,7 @@ def bd_crreject(joinedfile):
 
     """
 
-    fd = pyfits.open(joinedfile)
+    fd = fits.open(joinedfile)
     nimset   = fd[0].header['nextend'] / 3
     nrptexp  = fd[0].header['nrptexp']
     crcorr   = fd[0].header['crcorr']
@@ -815,8 +814,8 @@ def bd_crreject(joinedfile):
         print('FYI: CR rejection not already done')
         print(('Keyword NRPTEXP = ' + str(nrptexp) + ' while nr. of imsets = ' + str(nimset)))
         if (nrptexp != nimset):
-            pyfits.setval( joinedfile,'NRPTEXP',value=nimset)
-            pyfits.setval( joinedfile,'CRSPLIT',value=1)
+            fits.setval( joinedfile,'NRPTEXP',value=nimset)
+            fits.setval( joinedfile,'CRSPLIT',value=1)
 
             print(('>>>> Updated keyword NRPTEXP to '+str(nimset) ))
             print('    (and set keyword CRSPLIT to 1)' )
@@ -845,7 +844,7 @@ def bd_calstis(joinedfile, thebiasfile=None):
 
     """
 
-    with pyfits.open(joinedfile, 'update') as hdu:
+    with fits.open(joinedfile, 'update') as hdu:
         hdu[0].header['CRCORR'] = 'PERFORM'
         hdu[0].header['APERTURE'] = '50CCD'
         hdu[0].header['APER_FOV'] = '50x50'
@@ -886,7 +885,7 @@ def bd_calstis(joinedfile, thebiasfile=None):
         finally:
             raise Exception('CalSTIS failed to properly reduce {}'.format(joinedfile))
 
-    pyfits.setval(crj_file, 'FILENAME', value=os.path.split(crj_file)[1])
+    fits.setval(crj_file, 'FILENAME', value=os.path.split(crj_file)[1])
 
 #------------------------------------------------------------------------
 
@@ -922,9 +921,9 @@ def refaver(reffiles, combined_name):
         Output name of the combined file
 
     """
-    from pyraf import iraf
-    from iraf import stsdas
-    from iraf import mstools
+    #from pyraf import iraf
+    #from iraf import stsdas
+    #from iraf import mstools
 
     print('#-----------------------#')
     print('combining datasets')
@@ -940,17 +939,23 @@ def refaver(reffiles, combined_name):
     initial_dir = os.getcwd()
     os.chdir(list(all_paths)[0])
     try:
-        iraf.chdir(list(all_paths)[0])
+        os.chdir(list(all_paths)[0]) #changed iraf to os.
     except:
-        iraf.chdir(''.join(['/grp/hst/stis/darks_biases/refstis_new/',
-        list(all_paths)[0]]))
+        os.chdir(''.join(['/grp/hst/stis/darks_biases/refstis_new/',
+        list(all_paths)[0]])) #changed iraf to os.
 
     all_subfiles = []
     for subfile in reffiles:
         subfile = os.path.split(subfile)[-1]
         outfile = subfile.replace('.fits', '_aver.fits')
         print("Running msarith / 2 on {}".format(subfile))
-        iraf.msarith(subfile, '/', 2, outfile, verbose=1)
+        #iraf.msarith(subfile, '/', 2, outfile, verbose=1)
+
+        # Instead of using iraf.msarith... But may need to change -- headers?
+        hdu = fits.open(subfile)
+        new_data = hdu.data / 2.
+        hdu.writeto(outfile)
+
         all_subfiles.append(outfile)
 
     assert len(all_subfiles) == 2, 'Length of subfiles doesnt equal 2: {}'.format(all_subfiles)
@@ -968,7 +973,7 @@ def refaver(reffiles, combined_name):
 
     #-- move back to beginning location
     os.chdir(initial_dir)
-    iraf.chdir(initial_dir)
+    #iraf.chdir(initial_dir)
 
 #------------------------------------------------------------------------
 
@@ -989,7 +994,7 @@ def apply_dark_correction(filename, expstart):
 
     dark_v_temp = 0.07
     s2ref_temp = 18.0
-    with pyfits.open(filename, mode = 'update') as ofile:
+    with fits.open(filename, mode = 'update') as ofile:
         if 'tempcorr' not in ofile[0].header:
             nextend = ofile[0].header['nextend']
 
@@ -1027,7 +1032,7 @@ def bias_subtract_data(filename, biasfile):
 
     """
 
-    with pyfits.open(filename) as hdu:
+    with fits.open(filename) as hdu:
         if (hdu[0].header['BLEVCORR'] == 'COMPLETE') or (hdu[0].header['BIASCORR'] == 'COMPLETE'):
             print("BIAS correction already done for {}".format(filename))
             return filename
@@ -1043,7 +1048,7 @@ def bias_subtract_data(filename, biasfile):
 
     biasfile = make_path_safe(biasfile)
 
-    pyfits.setval(filename, 'BIASFILE', ext=0, value=biasfile)
+    fits.setval(filename, 'BIASFILE', ext=0, value=biasfile)
     status = basic2d(filename,
                      dqicorr='perform',
                      blevcorr='perform',

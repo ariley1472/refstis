@@ -20,6 +20,7 @@ from datetime import date
 from crds import certify
 import stistools
 from stistools.calstis import calstis
+#from reffile_delivery_tools.misc.read_deliveryform import DeliveryForm
 
 from .functions import send_email
 
@@ -288,9 +289,34 @@ def send_forms(folder):
     start_dir = os.getcwd()
     os.chdir(folder)
 
+    #get the useafters:
+    #drkfiles = sorted(glob.glob('*_drk.fits'))
+    #useafter = fits.getval(f[0], 'USEAFTER')
+
+
+    #get today's date
     today_obj = date.today()
     today = str(today_obj.month) + '/' + \
         str(today_obj.day) + '/' + str(today_obj.year)
+
+
+    #fill out the delivery form
+    #form = DeliveryForm()
+
+    #answers = ['Allyssa Riley', 'lockwood@stsci.edu, debes@stsci.edu', today, 'STIS',
+    #           'biases, darks', 'yes', 'yes', 'yes', 'N/A', 'yes', 'yes, ops', 'N/A',
+    #           'no', 'yes, calstis v. 3.4', 'no', 'N/A', 'N/A', 'no', 'N/A', 'SEVERE',
+    #           'N/A', 'All STIS CCD modes taken after {}'.format(useafter), #get the useafter of the first file
+    #           'Used calstis v. {} to reduce a test suite of CCD data and reduced a test suite of dark images as if they were science images. The reduced darks were significantly lower in median and meean values. The CCD images were reduced to either flt, crj, x1d, x2d, sx1, and sx2 as appropriate'.format(stistools.calstis.__version__),
+    #           '', 'New weekly bias and dark frames were created for the new anneal month and need to be delivered for GO observations. These files are available for STIS CCD observations taken after {}'.format(useafter)] #find the useafter!
+
+    #for question, answer in zip(form.data.keys(), answers):
+    #    form.data[question] = answer
+
+    #write out the deliver form
+    #form.write(os.path.join(folder, 'delivery_form.txt'))
+
+
     message = '1. Name of deliverer: Allyssa Riley\n'
     message += '    a. (other e-mail addresses) lockwood@stsci.edu, debes@stsci.edu\n'
     message += '\n'
@@ -378,7 +404,7 @@ def send_forms(folder):
     delivery_form = open('deliveryform.txt', 'w')
     delivery_form.write(message)
 
-    send_email(subject='STIS Darks and Bias Delivery Form', message=message)
+    send_email(subject='STIS Darks and Bias Delivery Form', message=message)#str(form))
 
     os.chdir(start_dir)
 
